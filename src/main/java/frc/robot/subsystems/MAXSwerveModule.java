@@ -51,21 +51,14 @@ public class MAXSwerveModule {
     // Apply the respective configurations to the SPARKS. Reset parameters before
     // applying the configuration to bring the SPARK to a known good state. Persist
     // the settings to the SPARK to avoid losing them on a power cycle.
-    m_drivingSpark.configure(Configs.MAXSwerveModule.drivingConfig, ResetMode.kResetSafeParameters,
-        PersistMode.kPersistParameters);
-    m_turningSpark.configure(Configs.MAXSwerveModule.turningConfig, ResetMode.kResetSafeParameters,
-        PersistMode.kPersistParameters);
+    m_drivingSpark.configure(Configs.MAXSwerveModule.drivingConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+    m_turningSpark.configure(Configs.MAXSwerveModule.turningConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
 
     m_chassisAngularOffset = chassisAngularOffset;
     m_desiredState.angle = new Rotation2d(m_turningEncoder.getPosition());
     m_drivingEncoder.setPosition(0);
   }
 
-  /**
-   * Returns the current state of the module.
-   *
-   * @return The current state of the module.
-   */
   public SwerveModuleState getState() {
     // Apply chassis angular offset to the encoder position to get the position
     // relative to the chassis.
@@ -73,11 +66,6 @@ public class MAXSwerveModule {
         new Rotation2d(m_turningEncoder.getPosition() - m_chassisAngularOffset));
   }
 
-  /**
-   * Returns the current position of the module.
-   *
-   * @return The current position of the module.
-   */
   public SwerveModulePosition getPosition() {
     // Apply chassis angular offset to the encoder position to get the position
     // relative to the chassis.
@@ -86,11 +74,6 @@ public class MAXSwerveModule {
         new Rotation2d(m_turningEncoder.getPosition() - m_chassisAngularOffset));
   }
 
-  /**
-   * Sets the desired state for the module.
-   *
-   * @param desiredState Desired state with speed and angle.
-   */
   public void setDesiredState(SwerveModuleState desiredState) {
     // Apply chassis angular offset to the desired state.
     SwerveModuleState correctedDesiredState = new SwerveModuleState();
@@ -107,7 +90,6 @@ public class MAXSwerveModule {
     m_desiredState = desiredState;
   }
 
-  /** Zeroes all the SwerveModule encoders. */
   public void resetEncoders() {
     m_drivingEncoder.setPosition(0);
   }
