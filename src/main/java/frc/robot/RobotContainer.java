@@ -58,8 +58,7 @@ public class RobotContainer {
     // m_driverController.x().whileTrue(m_intakeSubsystem.runIntakeReverse());
 
 
-    //Toggle
-    m_driverController.a().toggleOnTrue(m_intakeSubsystem.runIntake());
+    m_driverController.a().whileTrue(m_intakeSubsystem.runIntake());
     m_driverController.x().whileTrue(m_intakeSubsystem.runIntakeReverse());
   }
 
