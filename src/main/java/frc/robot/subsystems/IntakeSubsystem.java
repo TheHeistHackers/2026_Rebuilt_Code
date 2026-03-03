@@ -11,7 +11,6 @@ import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.config.SparkMaxConfig;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 
-import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 
@@ -69,16 +68,25 @@ public class IntakeSubsystem extends SubsystemBase {
   // After running the motors, command the motors off.
   // This isn't needed but we shouldn't depend on motor configs. to do this.
 
-  public Command runIntake(){
-    return runEnd(
-        () -> intakeMotor.setVoltage(12),
-        () -> intakeMotor.setVoltage(0));
+  // public Command runIntake(){
+  //   return runEnd(
+  //       () -> intakeMotor.setVoltage(12),
+  //       () -> intakeMotor.setVoltage(0));
+  // }
+
+  // public Command runIntakeReverse(){
+  //   return runEnd(
+  //       () -> intakeMotor.setVoltage(-12),
+  //       () -> intakeMotor.setVoltage(0));
+  // }
+
+  public void runIntake(double voltage){
+    intakeMotor.setVoltage(voltage);
   }
 
-  public Command runIntakeReverse(){
-    return runEnd(
-        () -> intakeMotor.setVoltage(-12),
-        () -> intakeMotor.setVoltage(0));
+  
+  public void runIntakeReverse(double voltage){
+    intakeMotor.setVoltage(-voltage);
   }
 
   @Override

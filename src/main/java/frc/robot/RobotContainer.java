@@ -33,9 +33,9 @@ import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 public class RobotContainer {
   // The robot's subsystems and commands are defined here...
   private final DriveSubsystem m_robotDrive = new DriveSubsystem();
+  private final IntakeSubsystem m_intakeSubsystem = new IntakeSubsystem();
 
   XboxController m_driverController = new XboxController(OIConstants.kDriverControllerPort);
-  private final IntakeSubsystem m_intakeSubsystem = new IntakeSubsystem();
 
   public RobotContainer() {
 
@@ -63,13 +63,28 @@ public class RobotContainer {
         .onTrue(new InstantCommand(
             () -> m_robotDrive.zeroHeading(),
             m_robotDrive));
+    
+
+    //////////////////////////////////////////////////////////////////////////////
+    /// So uhh, this didn't work since the drivetrain uses XboxController and 
+    /// the intake was designed using CommandXboxController...
+    /// There is probably a way to do it but idk
+    //////////////////////////////////////////////////////////////////////////////
     //BASIC
     // m_driverController.a().whileTrue(m_intakeSubsystem.runIntake());
     // m_driverController.x().whileTrue(m_intakeSubsystem.runIntakeReverse());
-
-
-    m_driverController.a().whileTrue(m_intakeSubsystem.runIntake());
-    m_driverController.x().whileTrue(m_intakeSubsystem.runIntakeReverse());
+    //m_driverController.a().whileTrue(m_intakeSubsystem.runIntake());
+    //m_driverController.x().whileTrue(m_intakeSubsystem.runIntakeReverse());
+    
+    new JoystickButton(m_driverController, XboxController.Button.kA.value)
+        .whileTrue(new RunCommand(
+          () -> m_intakeSubsystem.runIntake(12),
+          m_intakeSubsystem));
+          
+    new JoystickButton(m_driverController, XboxController.Button.kX.value)
+        .whileTrue(new RunCommand(
+          () -> m_intakeSubsystem.runIntakeReverse(12),
+          m_intakeSubsystem));
   }
   
 public Command getAutonomousCommand() {
