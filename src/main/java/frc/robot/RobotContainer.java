@@ -22,6 +22,7 @@ import edu.wpi.first.math.trajectory.TrajectoryConfig;
 import edu.wpi.first.math.trajectory.TrajectoryGenerator;
 import edu.wpi.first.wpilibj.PS4Controller.Button;
 import edu.wpi.first.wpilibj.XboxController;
+import frc.robot.subsystems.IntakeSubsystem;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.RunCommand;
@@ -34,6 +35,7 @@ public class RobotContainer {
   private final DriveSubsystem m_robotDrive = new DriveSubsystem();
 
   XboxController m_driverController = new XboxController(OIConstants.kDriverControllerPort);
+  private final IntakeSubsystem m_intakeSubsystem = new IntakeSubsystem();
 
   public RobotContainer() {
 
@@ -61,6 +63,13 @@ public class RobotContainer {
         .onTrue(new InstantCommand(
             () -> m_robotDrive.zeroHeading(),
             m_robotDrive));
+    //BASIC
+    // m_driverController.a().whileTrue(m_intakeSubsystem.runIntake());
+    // m_driverController.x().whileTrue(m_intakeSubsystem.runIntakeReverse());
+
+
+    m_driverController.a().whileTrue(m_intakeSubsystem.runIntake());
+    m_driverController.x().whileTrue(m_intakeSubsystem.runIntakeReverse());
   }
   
 public Command getAutonomousCommand() {
