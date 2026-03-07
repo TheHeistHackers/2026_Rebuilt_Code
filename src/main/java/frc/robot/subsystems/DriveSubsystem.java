@@ -46,10 +46,15 @@ public class DriveSubsystem extends SubsystemBase {
 
   private final AHRS m_gyro = new AHRS(NavXComType.kMXP_SPI);
 
+  // Set this to match how you mounted the NavX: HORIZONTAL, VERTICAL_PITCH, or VERTICAL_ROLL
+  private enum MountOrientation { HORIZONTAL, VERTICAL_PITCH, VERTICAL_ROLL }
+  private static final MountOrientation kGyroMount = MountOrientation.VERTICAL_PITCH;
+
+
   // Odometry class for tracking robot pose
   SwerveDriveOdometry m_odometry = new SwerveDriveOdometry(
       DriveConstants.kDriveKinematics,
-      Rotation2d.fromDegrees(-m_gyro.getAngle()),
+      Rotation2d.fromDegrees(-getGyroAngleDegrees()),
       new SwerveModulePosition[] {
           m_frontLeft.getPosition(),
           m_frontRight.getPosition(),
@@ -67,14 +72,14 @@ public class DriveSubsystem extends SubsystemBase {
   public void periodic() {
     // Update the odometry in the periodic block
     m_odometry.update(
-        Rotation2d.fromDegrees(-m_gyro.getAngle()),
+        Rotation2d.fromDegrees(-getGyroAngleDegrees()),
         new SwerveModulePosition[] {
             m_frontLeft.getPosition(),
             m_frontRight.getPosition(),
             m_rearLeft.getPosition(),
             m_rearRight.getPosition()
         });
-    SmartDashboard.putNumber("Gyro Angle", -m_gyro.getAngle());
+    SmartDashboard.putNumber("Gyro Angle", -getGyroAngleDegrees());
   }
 
   public Pose2d getPose() {
@@ -83,7 +88,7 @@ public class DriveSubsystem extends SubsystemBase {
 
   public void resetOdometry(Pose2d pose) {
     m_odometry.resetPosition(
-        Rotation2d.fromDegrees(-m_gyro.getAngle()),
+        Rotation2d.fromDegrees(-getGyroAngleDegrees()),
         new SwerveModulePosition[] {
             m_frontLeft.getPosition(),
             m_frontRight.getPosition(),
@@ -109,7 +114,7 @@ public class DriveSubsystem extends SubsystemBase {
 
     var swerveModuleStates = DriveConstants.kDriveKinematics.toSwerveModuleStates(
         fieldRelative
-            ? ChassisSpeeds.fromFieldRelativeSpeeds(xSpeedDelivered, ySpeedDelivered, rotDelivered, Rotation2d.fromDegrees(-m_gyro.getAngle()))
+            ? ChassisSpeeds.fromFieldRelativeSpeeds(xSpeedDelivered, ySpeedDelivered, rotDelivered, Rotation2d.fromDegrees(-getGyroAngleDegrees()))
             : new ChassisSpeeds(xSpeedDelivered, ySpeedDelivered, rotDelivered));
     SwerveDriveKinematics.desaturateWheelSpeeds(swerveModuleStates, DriveConstants.kMaxSpeedMetersPerSecond);
     m_frontLeft.setDesiredState(swerveModuleStates[0]);
@@ -146,10 +151,38 @@ public class DriveSubsystem extends SubsystemBase {
   }
 
   public double getHeading() {
-    return Rotation2d.fromDegrees(-m_gyro.getAngle()).getDegrees();
+    return Rotation2d.fromDegrees(-getGyroAngleDegrees()).getDegrees();
   }
 
   public double getTurnRate() {
-    return m_gyro.getRate() * (DriveConstants.kGyroReversed ? -1.0 : 1.0);
+    return getGyroRateDps() * (DriveConstants.kGyroReversed ? -1.0 : 1.0);
+  }
+
+  // Map NavX outputs depending on how it's mounted
+  private double getGyroAngleDegrees() {
+    switch (kGyroMount) {
+      case HORIZONTAL:
+        return m_gyro.getAngle(); // yaw as before
+      case VERTICAL_PITCH:
+        return m_gyro.getPitch();
+      case VERTICAL_ROLL:
+        return m_gyro.getRoll();
+      default:
+        return m_gyro.getAngle();
+    }
+  }
+
+  // Use raw gyro axes for rate mapping (degrees/sec). Adjust if your AHRS library differs.
+  private double getGyroRateDps() {
+    switch (kGyroMount) {
+      case HORIZONTAL:
+        return m_gyro.getRawGyroZ();
+      case VERTICAL_PITCH:
+        return m_gyro.getRawGyroY();
+      case VERTICAL_ROLL:
+        return m_gyro.getRawGyroX();
+      default:
+        return m_gyro.getRawGyroZ();
+    }
   }
 }
