@@ -46,18 +46,6 @@ public class DriveSubsystem extends SubsystemBase {
 
   private final AHRS m_gyro = new AHRS(NavXComType.kMXP_SPI);
 
-  // Set this to match how you mounted the NavX: HORIZONTAL, VERTICAL_PITCH, or VERTICAL_ROLL
-  private enum MountOrientation { HORIZONTAL, VERTICAL_PITCH, VERTICAL_ROLL }
-  private static final MountOrientation kGyroMount = MountOrientation.VERTICAL_PITCH;
-
-  // Tune these if the reported "front" is wrong:
-  // - kGyroAngleSign: 1 or -1 to flip rotation direction
-  // - kGyroAngleOffsetDeg: rotate the reported heading (0, 90, 180, -90, etc.)
-  // Use SmartDashboard "Gyro Angle" and the robot pointing test described below to pick values.
-  private static final int kGyroAngleSign = 1;
-  private static final double kGyroAngleOffsetDeg = 0.0;
-
-
   // Odometry class for tracking robot pose
   SwerveDriveOdometry m_odometry = new SwerveDriveOdometry(
       DriveConstants.kDriveKinematics,
@@ -167,40 +155,11 @@ public class DriveSubsystem extends SubsystemBase {
 
   // Map NavX outputs depending on how it's mounted
   private double getGyroAngleDegrees() {
-    double raw;
-    switch (kGyroMount) {
-      case HORIZONTAL:
-        raw = m_gyro.getAngle(); // yaw (degrees)
-        break;
-      case VERTICAL_PITCH:
-        raw = m_gyro.getPitch(); // pitch becomes yaw when vertical
-        break;
-      case VERTICAL_ROLL:
-        raw = m_gyro.getRoll(); // roll becomes yaw when vertical
-        break;
-      default:
-        raw = m_gyro.getAngle();
-    }
-    // apply configurable sign and offset so "front" can be calibrated
-    return kGyroAngleSign * raw + kGyroAngleOffsetDeg;
+    return m_gyro.getPitch() + 90;
   }
 
   // Use raw gyro axes for rate mapping (degrees/sec). Adjust if your AHRS library differs.
   private double getGyroRateDps() {
-    double rawRate;
-    switch (kGyroMount) {
-      case HORIZONTAL:
-        rawRate = m_gyro.getRawGyroZ();
-        break;
-      case VERTICAL_PITCH:
-        rawRate = m_gyro.getRawGyroY();
-        break;
-      case VERTICAL_ROLL:
-        rawRate = m_gyro.getRawGyroX();
-        break;
-      default:
-        rawRate = m_gyro.getRawGyroZ();
-    }
-    return kGyroAngleSign * rawRate;
+    return m_gyro.getRawGyroY();
   }
 }
