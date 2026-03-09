@@ -23,6 +23,7 @@ import edu.wpi.first.math.trajectory.TrajectoryGenerator;
 import edu.wpi.first.wpilibj.PS4Controller.Button;
 import edu.wpi.first.wpilibj.XboxController;
 import frc.robot.subsystems.IntakeSubsystem;
+import frc.robot.subsystems.IndexSubsystem;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.RunCommand;
@@ -34,6 +35,8 @@ public class RobotContainer {
   // The robot's subsystems and commands are defined here...
   private final DriveSubsystem m_robotDrive = new DriveSubsystem();
   private final IntakeSubsystem m_intakeSubsystem = new IntakeSubsystem();
+  private final IndexSubsystem m_indexSubsystem = new IndexSubsystem();
+
 
   XboxController m_driverController = new XboxController(OIConstants.kDriverControllerPort);
 
@@ -65,26 +68,26 @@ public class RobotContainer {
             m_robotDrive));
     
 
-    //////////////////////////////////////////////////////////////////////////////
-    /// So uhh, this didn't work since the drivetrain uses XboxController and 
-    /// the intake was designed using CommandXboxController...
-    /// There is probably a way to do it but idk
-    //////////////////////////////////////////////////////////////////////////////
-    //BASIC
-    // m_driverController.a().whileTrue(m_intakeSubsystem.runIntake());
-    // m_driverController.x().whileTrue(m_intakeSubsystem.runIntakeReverse());
-    //m_driverController.a().whileTrue(m_intakeSubsystem.runIntake());
-    //m_driverController.x().whileTrue(m_intakeSubsystem.runIntakeReverse());
-    
     new JoystickButton(m_driverController, XboxController.Button.kA.value)
-        .whileTrue(new RunCommand(
+        .toggleOnTrue(new RunCommand(
           () -> m_intakeSubsystem.runIntake(12),
           m_intakeSubsystem));
           
     new JoystickButton(m_driverController, XboxController.Button.kX.value)
-        .whileTrue(new RunCommand(
+        .toggleOnTrue(new RunCommand(
           () -> m_intakeSubsystem.runIntakeReverse(12),
           m_intakeSubsystem));
+
+
+    new JoystickButton(m_driverController, XboxController.Button.kB.value)
+        .toggleOnTrue(new RunCommand(
+          () -> m_indexSubsystem.runIndexOne(12),
+          m_indexSubsystem));
+          
+    new JoystickButton(m_driverController, XboxController.Button.kY.value)
+        .toggleOnTrue(new RunCommand(
+          () -> m_indexSubsystem.runIndexTwo(12),
+          m_indexSubsystem));
   }
   
 public Command getAutonomousCommand() {
