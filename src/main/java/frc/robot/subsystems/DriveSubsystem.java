@@ -155,11 +155,57 @@ public class DriveSubsystem extends SubsystemBase {
 
   // Map NavX outputs depending on how it's mounted
   private double getGyroAngleDegrees() {
+    // Try common heading/yaw accessors on the AHRS first (some bindings expose getYaw/getAngle/etc.).
+    // Use reflection so this compiles regardless of which methods are present on the Studica AHRS wrapper.
+    try {
+      String[] candidates = {"getYaw", "getAngle", "getFusedHeading", "getHeading", "getCompassHeading", "getRotation2d"};
+      for (String name : candidates) {
+        try {
+          java.lang.reflect.Method method = m_gyro.getClass().getMethod(name);
+          Object val = method.invoke(m_gyro);
+          if (val instanceof Double) {
+            return (Double) val;
+          } else if (val instanceof Float) {
+            return ((Float) val).doubleValue();
+          }
+        } catch (NoSuchMethodException e) {
+          // try next candidate
+        }
+      }
+    } catch (Exception e) {
+      // fall through to legacy mapping below
+    }
+
+    // Fallback: the navX is mounted vertically on this robot. Historically this
+    // project used pitch + 90 to map the mounted axis to a heading value. Keep
+    // that behavior as a safe fallback so non-field-oriented driving remains
+    // unchanged if no heading accessor exists.
     return m_gyro.getPitch() + 90;
   }
 
   // Use raw gyro axes for rate mapping (degrees/sec). Adjust if your AHRS library differs.
   private double getGyroRateDps() {
+    // Prefer common yaw-rate / rate accessors when available.
+    try {
+      String[] candidates = {"getRate", "getYawRate", "getRawGyroZ", "getRawGyroY", "getRawGyroX"};
+      for (String name : candidates) {
+        try {
+          java.lang.reflect.Method method = m_gyro.getClass().getMethod(name);
+          Object val = method.invoke(m_gyro);
+          if (val instanceof Double) {
+            return (Double) val;
+          } else if (val instanceof Float) {
+            return ((Float) val).doubleValue();
+          }
+        } catch (NoSuchMethodException e) {
+          // try next candidate
+        }
+      }
+    } catch (Exception e) {
+      // fall through to legacy mapping below
+    }
+
+    // Legacy/raw fallback
     return m_gyro.getRawGyroY();
   }
 }
