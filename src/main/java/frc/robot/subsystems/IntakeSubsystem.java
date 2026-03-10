@@ -44,43 +44,7 @@ public class IntakeSubsystem extends SubsystemBase {
 
   }
 
-  /*
-    public Command runIntake(){
-      return run(() -> intakeMotor.set(1));
-    }
-
-    public Command runIntakeReverse(){
-      return run(() -> intakeMotor.set(-1));
-    }
-
-
-    With voltage
-
-    public Command runIntake(){
-      return run(() -> intakeMotor.setVoltage(12));
-    }
-
-    public Command runIntakeReverse(){
-      return run(() -> intakeMotor.setVoltage(-12));
-    }
-  */
-
-  // After running the motors, command the motors off.
-  // This isn't needed but we shouldn't depend on motor configs. to do this.
-
-  // public Command runIntake(){
-  //   return runEnd(
-  //       () -> intakeMotor.setVoltage(12),
-  //       () -> intakeMotor.setVoltage(0));
-  // }
-
-  // public Command runIntakeReverse(){
-  //   return runEnd(
-  //       () -> intakeMotor.setVoltage(-12),
-  //       () -> intakeMotor.setVoltage(0));
-  // }
-
-  public void runIntake(double voltage){
+  public void runIntakeForward(double voltage){
     intakeMotor.setVoltage(voltage);
   }
 

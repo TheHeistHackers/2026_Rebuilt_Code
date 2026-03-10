@@ -26,6 +26,7 @@ import frc.robot.subsystems.IntakeSubsystem;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.RunCommand;
+import edu.wpi.first.wpilibj2.command.StartEndCommand;
 import edu.wpi.first.wpilibj2.command.SwerveControllerCommand;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 
@@ -64,26 +65,16 @@ public class RobotContainer {
             () -> m_robotDrive.zeroHeading(),
             m_robotDrive));
     
-
-    //////////////////////////////////////////////////////////////////////////////
-    /// So uhh, this didn't work since the drivetrain uses XboxController and 
-    /// the intake was designed using CommandXboxController...
-    /// There is probably a way to do it but idk
-    //////////////////////////////////////////////////////////////////////////////
-    //BASIC
-    // m_driverController.a().whileTrue(m_intakeSubsystem.runIntake());
-    // m_driverController.x().whileTrue(m_intakeSubsystem.runIntakeReverse());
-    //m_driverController.a().whileTrue(m_intakeSubsystem.runIntake());
-    //m_driverController.x().whileTrue(m_intakeSubsystem.runIntakeReverse());
-    
     new JoystickButton(m_driverController, XboxController.Button.kA.value)
-        .whileTrue(new RunCommand(
-          () -> m_intakeSubsystem.runIntake(12),
+        .whileTrue(new StartEndCommand(
+          () -> m_intakeSubsystem.runIntakeForward(12),
+          () -> m_intakeSubsystem.runIntakeForward(0),
           m_intakeSubsystem));
           
     new JoystickButton(m_driverController, XboxController.Button.kX.value)
-        .whileTrue(new RunCommand(
+        .whileTrue(new StartEndCommand(
           () -> m_intakeSubsystem.runIntakeReverse(12),
+          () -> m_intakeSubsystem.runIntakeReverse(0),
           m_intakeSubsystem));
   }
   
