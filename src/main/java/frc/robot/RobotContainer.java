@@ -24,6 +24,7 @@ import edu.wpi.first.math.trajectory.TrajectoryGenerator;
 import edu.wpi.first.wpilibj.PS4Controller.Button;
 import edu.wpi.first.wpilibj.XboxController;
 import frc.robot.subsystems.IntakeSubsystem;
+import frc.robot.subsystems.TurretSubsystem;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.RunCommand;
@@ -37,6 +38,7 @@ public class RobotContainer {
   private final DriveSubsystem m_robotDrive = new DriveSubsystem();
   private final IntakeSubsystem m_intakeSubsystem = new IntakeSubsystem();
   private final IndexSubsystem m_indexSubsystem = new IndexSubsystem();
+  private final TurretSubsystem m_turretSubsystem = new TurretSubsystem();
 
   XboxController m_driverController = new XboxController(OIConstants.kDriverControllerPort);
 
@@ -118,6 +120,12 @@ public class RobotContainer {
           () -> m_indexSubsystem.runIndexThreeReverse(1),
           () -> m_indexSubsystem.runIndexThreeReverse(0),
           m_indexSubsystem));
+
+    new JoystickButton(m_driverController, XboxController.Axis.kRightTrigger.value)
+        .whileTrue(new StartEndCommand(() -> m_turretSubsystem.shoot(XboxController.Axis.kRightTrigger.value), () -> m_turretSubsystem.shoot(0), m_turretSubsystem));
+
+    new JoystickButton(m_driverController, XboxController.Axis.kLeftTrigger.value)
+        .whileTrue(new StartEndCommand(() -> m_turretSubsystem.shootReverse(XboxController.Axis.kLeftTrigger.value), () -> m_turretSubsystem.shootReverse(0), m_turretSubsystem));
   }
   
 public Command getAutonomousCommand() {
