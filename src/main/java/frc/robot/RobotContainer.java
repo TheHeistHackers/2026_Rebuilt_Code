@@ -8,6 +8,7 @@ import frc.robot.Constants.AutoConstants;
 import frc.robot.Constants.DriveConstants;
 import frc.robot.Constants.OIConstants;
 import frc.robot.subsystems.DriveSubsystem;
+import frc.robot.subsystems.IndexSubsystem;
 
 import java.util.List;
 
@@ -35,6 +36,7 @@ public class RobotContainer {
   // The robot's subsystems and commands are defined here...
   private final DriveSubsystem m_robotDrive = new DriveSubsystem();
   private final IntakeSubsystem m_intakeSubsystem = new IntakeSubsystem();
+  private final IndexSubsystem m_indexSubsystem = new IndexSubsystem();
 
   XboxController m_driverController = new XboxController(OIConstants.kDriverControllerPort);
 
@@ -65,17 +67,57 @@ public class RobotContainer {
             () -> m_robotDrive.zeroHeading(),
             m_robotDrive));
     
+    //Intake
     new JoystickButton(m_driverController, XboxController.Button.kA.value)
         .whileTrue(new StartEndCommand(
-          () -> m_intakeSubsystem.runIntakeForward(12),
+          () -> m_intakeSubsystem.runIntakeForward(1),  
           () -> m_intakeSubsystem.runIntakeForward(0),
           m_intakeSubsystem));
-          
-    new JoystickButton(m_driverController, XboxController.Button.kX.value)
+
+    new JoystickButton(m_driverController, XboxController.Button.kB.value)
         .whileTrue(new StartEndCommand(
-          () -> m_intakeSubsystem.runIntakeReverse(12),
+          () -> m_intakeSubsystem.runIntakeReverse(1),
           () -> m_intakeSubsystem.runIntakeReverse(0),
           m_intakeSubsystem));
+
+    //Index One
+    new JoystickButton(m_driverController, XboxController.Button.kX.value)
+        .whileTrue(new StartEndCommand(
+          () -> m_indexSubsystem.runIndexOneForward(1),
+          () -> m_indexSubsystem.runIndexOneForward(0),
+          m_indexSubsystem));
+          
+    new JoystickButton(m_driverController, XboxController.Button.kA.value)
+        .whileTrue(new StartEndCommand(
+          () -> m_indexSubsystem.runIndexOneReverse(1),
+          () -> m_indexSubsystem.runIndexOneReverse(0),
+          m_indexSubsystem));
+
+    //Index Two
+    new JoystickButton(m_driverController, XboxController.Button.kLeftBumper.value)
+        .whileTrue(new StartEndCommand(
+          () -> m_indexSubsystem.runIndexTwoForward(1),
+          () -> m_indexSubsystem.runIndexTwoForward(0),
+          m_indexSubsystem));
+          
+    new JoystickButton(m_driverController, XboxController.Button.kRightBumper.value)
+        .whileTrue(new StartEndCommand(
+          () -> m_indexSubsystem.runIndexTwoReverse(1),
+          () -> m_indexSubsystem.runIndexTwoReverse(0),
+          m_indexSubsystem));
+
+    //Index Three
+    new JoystickButton(m_driverController, XboxController.Button.kLeftBumper.value)
+        .whileTrue(new StartEndCommand(
+          () -> m_indexSubsystem.runIndexThreeForward(1),
+          () -> m_indexSubsystem.runIndexThreeForward(0),
+          m_indexSubsystem));
+          
+    new JoystickButton(m_driverController, XboxController.Button.kRightBumper.value)
+        .whileTrue(new StartEndCommand(
+          () -> m_indexSubsystem.runIndexThreeReverse(1),
+          () -> m_indexSubsystem.runIndexThreeReverse(0),
+          m_indexSubsystem));
   }
   
 public Command getAutonomousCommand() {

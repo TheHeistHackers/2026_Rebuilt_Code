@@ -88,4 +88,10 @@ public final class Constants {
   public static final class IntakeConstants {
     public static final int intakeMotorID = 25;
   }
+
+  public static final class IndexConstants {
+    public static final int indexMotorOneID = 26;
+    public static final int indexMotorTwoID = 27;
+    public static final int indexMotorThreeID = 28;
+  }
 }

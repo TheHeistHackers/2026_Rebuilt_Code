@@ -44,13 +44,13 @@ public class IntakeSubsystem extends SubsystemBase {
 
   }
 
-  public void runIntakeForward(double voltage){
-    intakeMotor.setVoltage(voltage);
+  public void runIntakeForward(double speed){
+    intakeMotor.set(speed);
   }
 
   
-  public void runIntakeReverse(double voltage){
-    intakeMotor.setVoltage(-voltage);
+  public void runIntakeReverse(double speed){
+    intakeMotor.set(-speed);
   }
 
   @Override
