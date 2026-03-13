@@ -29,7 +29,7 @@ public class IntakeSubsystem extends SubsystemBase {
     // I added the most common ones that all FRC teams use, but the values may need to change
 
     //Set the brake for when not receiving a command
-    intakeConfig.idleMode(IdleMode.kBrake);
+    intakeConfig.idleMode(IdleMode.kCoast);
 
     //Smart cutoff, the motor will try to keep this amount of Amperes
     intakeConfig.smartCurrentLimit(35);

@@ -19,12 +19,15 @@ public class IndexSubsystem extends SubsystemBase {
   private SparkMax indexMotorOne;
   private SparkMax indexMotorTwo;
   private SparkMax indexMotorThree;
+  private SparkMax indexMotorFour;
+
 
   public IndexSubsystem() {
     //Configure the index motors
     indexMotorOne = new SparkMax(Constants.IndexConstants.indexMotorOneID, MotorType.kBrushless);
     indexMotorTwo = new SparkMax(Constants.IndexConstants.indexMotorTwoID, MotorType.kBrushless);
     indexMotorThree = new SparkMax(Constants.IndexConstants.indexMotorThreeID, MotorType.kBrushless);
+    indexMotorFour = new SparkMax(Constants.IndexConstants.indexMotorFourID, MotorType.kBrushless);
 
     SparkMaxConfig indexConfig = new SparkMaxConfig();
 
@@ -32,7 +35,7 @@ public class IndexSubsystem extends SubsystemBase {
     // I added the most common ones that all FRC teams use, but the values may need to change
 
     //Set the brake for when not receiving a command
-    indexConfig.idleMode(IdleMode.kBrake);
+    indexConfig.idleMode(IdleMode.kCoast);
 
     //Smart cutoff, the motor will try to keep this amount of Amperes
     indexConfig.smartCurrentLimit(35);
@@ -46,6 +49,8 @@ public class IndexSubsystem extends SubsystemBase {
     indexMotorOne.configure(indexConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
     indexMotorTwo.configure(indexConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
     indexMotorThree.configure(indexConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+    indexMotorFour.configure(indexConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+  
   }
 
   public void runIndexOneForward(double speed){
@@ -60,6 +65,10 @@ public class IndexSubsystem extends SubsystemBase {
     indexMotorThree.set(speed);
   }
 
+  public void runIndexFourForward(double speed){
+    indexMotorFour.set(speed);
+  }
+
   public void runIndexOneReverse(double speed){
     indexMotorOne.set(-speed);
   }
@@ -72,6 +81,9 @@ public class IndexSubsystem extends SubsystemBase {
     indexMotorThree.set(-speed);
   }
 
+  public void runIndexFourReverse(double speed){
+    indexMotorFour.set(-speed);
+  }
   @Override
   public void periodic() {
     // This method will be called once per scheduler run
