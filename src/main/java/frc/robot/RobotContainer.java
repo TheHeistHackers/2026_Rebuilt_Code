@@ -21,7 +21,6 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.trajectory.Trajectory;
 import edu.wpi.first.math.trajectory.TrajectoryConfig;
 import edu.wpi.first.math.trajectory.TrajectoryGenerator;
-import edu.wpi.first.wpilibj.PS4Controller.Button;
 import edu.wpi.first.wpilibj.XboxController;
 import frc.robot.subsystems.IntakeSubsystem;
 import frc.robot.subsystems.TurretSubsystem;
@@ -69,126 +68,132 @@ public class RobotContainer {
             () -> m_robotDrive.zeroHeading(),
             m_robotDrive));
     
-    //Intake
-    new JoystickButton(m_driverController, XboxController.Button.kA.value)
-        .whileTrue(new StartEndCommand(
-          () -> m_intakeSubsystem.runIntakeForward(0.6),  
-          () -> m_intakeSubsystem.runIntakeForward(0),
-          m_intakeSubsystem));
+    // //Intake
+    // new JoystickButton(m_driverController, XboxController.Button.kA.value)
+    //     .whileTrue(new StartEndCommand(
+    //       () -> m_intakeSubsystem.runIntakeForward(0.6),  
+    //       () -> m_intakeSubsystem.runIntakeForward(0),
+    //       m_intakeSubsystem));
 
-    new JoystickButton(m_driverController, XboxController.Button.kB.value)
-        .whileTrue(new StartEndCommand(
-          () -> m_intakeSubsystem.runIntakeReverse(0.6),
-          () -> m_intakeSubsystem.runIntakeReverse(0),
-          m_intakeSubsystem));
+    // new JoystickButton(m_driverController, XboxController.Button.kB.value)
+    //     .whileTrue(new StartEndCommand(
+    //       () -> m_intakeSubsystem.runIntakeReverse(0.6),
+    //       () -> m_intakeSubsystem.runIntakeReverse(0),
+    //       m_intakeSubsystem));
 
-    //Index One
-    new JoystickButton(m_driverController, XboxController.Button.kX.value)
-        .whileTrue(new StartEndCommand(
-          () -> m_indexSubsystem.runIndexOneForward(0.6),
-          () -> m_indexSubsystem.runIndexOneForward(0),
-          m_indexSubsystem));
+    // //Index One
+    // new JoystickButton(m_driverController, XboxController.Button.kX.value)
+    //     .whileTrue(new StartEndCommand(
+    //       () -> m_indexSubsystem.runIndexOneForward(0.6),
+    //       () -> m_indexSubsystem.runIndexOneForward(0),
+    //       m_indexSubsystem));
           
-    new JoystickButton(m_driverController, XboxController.Button.kY.value)
-        .whileTrue(new StartEndCommand(
-          () -> m_indexSubsystem.runIndexOneReverse(0.6),
-          () -> m_indexSubsystem.runIndexOneReverse(0),
-          m_indexSubsystem));
+    // new JoystickButton(m_driverController, XboxController.Button.kY.value)
+    //     .whileTrue(new StartEndCommand(
+    //       () -> m_indexSubsystem.runIndexOneReverse(0.6),
+    //       () -> m_indexSubsystem.runIndexOneReverse(0),
+    //       m_indexSubsystem));
 
 
-// // Button A: Run Intake and Index One Forward
-// new JoystickButton(m_driverController, XboxController.Button.kA.value)
-//     .whileTrue(new StartEndCommand(
-//         () -> {
-//             m_intakeSubsystem.runIntakeForward(0.6);
-//             m_indexSubsystem.runIndexOneForward(0.6);
-//         },  
-//         () -> {
-//             m_intakeSubsystem.runIntakeForward(0);
-//             m_indexSubsystem.runIndexOneForward(0);
-//         },
-//         m_intakeSubsystem, m_indexSubsystem // Require both subsystems
-//     ));
+// Button A: Run Intake and Index One Forward
+new JoystickButton(m_driverController, XboxController.Button.kA.value)
+    .whileTrue(new StartEndCommand(
+        () -> {
+            m_intakeSubsystem.runIntakeForward(0.6);
+            m_indexSubsystem.runIndexOneForward(0.6);
+        },  
+        () -> {
+            m_intakeSubsystem.runIntakeForward(0);
+            m_indexSubsystem.runIndexOneForward(0);
+        },
+        m_intakeSubsystem, m_indexSubsystem // Require both subsystems
+    ));
 
-// // Button B: Run Intake and Index One Reverse
-// new JoystickButton(m_driverController, XboxController.Button.kB.value)
-//     .whileTrue(new StartEndCommand(
-//         () -> {
-//             m_intakeSubsystem.runIntakeReverse(0.6);
-//             m_indexSubsystem.runIndexOneReverse(0.6);
-//         },
-//         () -> {
-//             m_intakeSubsystem.runIntakeReverse(0);
-//             m_indexSubsystem.runIndexOneReverse(0);
-//         },
-//         m_intakeSubsystem, m_indexSubsystem // Require both subsystems
-//     ));
+// Button B: Run Intake and Index One Reverse
+new JoystickButton(m_driverController, XboxController.Button.kB.value)
+    .whileTrue(new StartEndCommand(
+        () -> {
+            m_intakeSubsystem.runIntakeReverse(0.6);
+            m_indexSubsystem.runIndexOneReverse(0.6);
+        },
+        () -> {
+            m_intakeSubsystem.runIntakeReverse(0);
+            m_indexSubsystem.runIndexOneReverse(0);
+        },
+        m_intakeSubsystem, m_indexSubsystem // Require both subsystems
+    ));
 
-    //Index Two
-    new JoystickButton(m_driverController, XboxController.Button.kX.value)
-        .whileTrue(new StartEndCommand(
-          () -> m_indexSubsystem.runIndexTwoForward(0.6),
-          () -> m_indexSubsystem.runIndexTwoForward(0),
-          m_indexSubsystem));
+    // //Index Two
+    // new JoystickButton(m_driverController, XboxController.Button.kX.value)
+    //     .whileTrue(new StartEndCommand(
+    //       () -> m_indexSubsystem.runIndexTwoForward(0.6),
+    //       () -> m_indexSubsystem.runIndexTwoForward(0),
+    //       m_indexSubsystem));
           
-    new JoystickButton(m_driverController, XboxController.Button.kY.value)
-        .whileTrue(new StartEndCommand(
-          () -> m_indexSubsystem.runIndexTwoReverse(0.6),
-          () -> m_indexSubsystem.runIndexTwoReverse(0),
-          m_indexSubsystem));
+    // new JoystickButton(m_driverController, XboxController.Button.kY.value)
+    //     .whileTrue(new StartEndCommand(
+    //       () -> m_indexSubsystem.runIndexTwoReverse(0.6),
+    //       () -> m_indexSubsystem.runIndexTwoReverse(0),
+    //       m_indexSubsystem));
 
-    //Index Three
-    new JoystickButton(m_driverController, XboxController.Button.kX.value)
-        .whileTrue(new StartEndCommand(
-          () -> m_indexSubsystem.runIndexThreeForward(0.6),
-          () -> m_indexSubsystem.runIndexThreeForward(0),
-          m_indexSubsystem));
+    // //Index Three
+    // new JoystickButton(m_driverController, XboxController.Button.kX.value)
+    //     .whileTrue(new StartEndCommand(
+    //       () -> m_indexSubsystem.runIndexThreeForward(0.6),
+    //       () -> m_indexSubsystem.runIndexThreeForward(0),
+    //       m_indexSubsystem));
           
-    new JoystickButton(m_driverController, XboxController.Button.kY.value)
-        .whileTrue(new StartEndCommand(
-          () -> m_indexSubsystem.runIndexThreeReverse(0.6),
-          () -> m_indexSubsystem.runIndexThreeReverse(0),
-          m_indexSubsystem));
+    // new JoystickButton(m_driverController, XboxController.Button.kY.value)
+    //     .whileTrue(new StartEndCommand(
+    //       () -> m_indexSubsystem.runIndexThreeReverse(0.6),
+    //       () -> m_indexSubsystem.runIndexThreeReverse(0),
+    //       m_indexSubsystem));
 
 
-//     // Button A: Run Intake and Index One Forward
-// new JoystickButton(m_driverController, XboxController.Button.kX.value)
-//     .whileTrue(new StartEndCommand(
-//         () -> {
-//             m_indexSubsystem.runIndexOneForward(0.6);
-//             m_indexSubsystem.runIndexTwoForward(0.6);
-//             m_indexSubsystem.runIndexThreeForward(0.6);
-//         },  
-//         () -> {
-//             m_indexSubsystem.runIndexOneForward(0);
-//             m_indexSubsystem.runIndexTwoForward(0);
-//             m_indexSubsystem.runIndexThreeForward(0);
-//         },
-//         m_indexSubsystem 
-//     ));
+    // Button A: Run Index and Turret Forward
+new JoystickButton(m_driverController, XboxController.Button.kX.value)
+    .whileTrue(new StartEndCommand(
+        () -> {
+            m_indexSubsystem.runIndexOneForward(0.6);
+            m_indexSubsystem.runIndexTwoForward(0.6);
+            m_indexSubsystem.runIndexThreeForward(0.6);
+            m_turretSubsystem.shoot(1);
 
-// // Button B: Run Intake and Index One Reverse
-// new JoystickButton(m_driverController, XboxController.Button.kB.value)
-//     .whileTrue(new StartEndCommand(
-//         () -> {
-//             m_indexSubsystem.runIndexOneReverse(0.6);
-//             m_indexSubsystem.runIndexTwoReverse(0.6);
-//             m_indexSubsystem.runIndexThreeReverse(0.6);
-//         },
-//         () -> {
-//             m_indexSubsystem.runIndexOneReverse(0);
-//             m_indexSubsystem.runIndexTwoReverse(0);
-//             m_indexSubsystem.runIndexThreeReverse(0);
-//         },
-//         m_indexSubsystem 
-//     ));
+        },  
+        () -> {
+            m_indexSubsystem.runIndexOneForward(0);
+            m_indexSubsystem.runIndexTwoForward(0);
+            m_indexSubsystem.runIndexThreeForward(0);
+            m_turretSubsystem.shoot(0);
+        },
+        m_indexSubsystem, m_turretSubsystem // Require both subsystems
+    ));
 
-    new JoystickButton(m_driverController, XboxController.Button.kRightBumper.value)
-        .whileTrue(new StartEndCommand(() -> m_turretSubsystem.shoot(1), () -> m_turretSubsystem.shoot(0), m_turretSubsystem));
+// Button B: Run Intake and Index One Reverse
+new JoystickButton(m_driverController, XboxController.Button.kB.value)
+    .whileTrue(new StartEndCommand(
+        () -> {
+            m_indexSubsystem.runIndexOneReverse(0.6);
+            m_indexSubsystem.runIndexTwoReverse(0.6);
+            m_indexSubsystem.runIndexThreeReverse(0.6);
+            m_turretSubsystem.shootReverse(1);
+        },
+        () -> {
+            m_indexSubsystem.runIndexOneReverse(0);
+            m_indexSubsystem.runIndexTwoReverse(0);
+            m_indexSubsystem.runIndexThreeReverse(0);
+            m_turretSubsystem.shootReverse(0);
+        },
+        m_indexSubsystem, m_turretSubsystem // Require both subsystems
+    ));
+}
 
-    new JoystickButton(m_driverController, XboxController.Button.kLeftBumper.value)
-        .whileTrue(new StartEndCommand(() -> m_turretSubsystem.shootReverse(1), () -> m_turretSubsystem.shootReverse(0), m_turretSubsystem));
-  }
+    // new JoystickButton(m_driverController, XboxController.Button.kRightBumper.value)
+    //     .whileTrue(new StartEndCommand(() -> m_turretSubsystem.shoot(1), () -> m_turretSubsystem.shoot(0), m_turretSubsystem));
+
+//     new JoystickButton(m_driverController, XboxController.Button.kLeftBumper.value)
+//         .whileTrue(new StartEndCommand(() -> m_turretSubsystem.shootReverse(1), () -> m_turretSubsystem.shootReverse(0), m_turretSubsystem));
+//   }
   
 public Command getAutonomousCommand() {
     // Create config for trajectory
