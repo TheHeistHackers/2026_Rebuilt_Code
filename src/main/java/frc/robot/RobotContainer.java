@@ -70,18 +70,18 @@ public class RobotContainer {
 
 
 // Button A: Run Intake and Index One Forward
-new JoystickButton(m_driverController, XboxController.Button.kLeftBumper.value)
-    .whileTrue(new StartEndCommand(
-        () -> {
-            m_intakeSubsystem.runIntakeForward(0.3);
-            m_indexSubsystem.runIndexOneForward(0.3);
-        },  
-        () -> {
-            m_intakeSubsystem.runIntakeForward(0);
-            m_indexSubsystem.runIndexOneForward(0);
-        },
-        m_intakeSubsystem, m_indexSubsystem // Require both subsystems
-    ));
+// new JoystickButton(m_driverController, XboxController.Button.kLeftBumper.value)
+//     .whileTrue(new StartEndCommand(
+//         () -> {
+//             m_intakeSubsystem.runIntakeForward(0.3);
+//             m_indexSubsystem.runIndexOneForward(0.3);
+//         },  
+//         () -> {
+//             m_intakeSubsystem.runIntakeForward(0);
+//             m_indexSubsystem.runIndexOneForward(0);
+//         },
+//         m_intakeSubsystem, m_indexSubsystem // Require both subsystems
+//     ));
 
 // // Button B: Run Intake and Index One Reverse
 // new JoystickButton(m_driverController, XboxController.Button.kA.value)
