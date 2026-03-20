@@ -99,23 +99,38 @@ public class RobotContainer {
 
     // Button A: Run Index and Turret Forward
 new JoystickButton(m_driverController, XboxController.Button.kRightBumper.value)
-    .whileTrue(new StartEndCommand(
+    .onTrue(new RunCommand(
         () -> {
             m_indexSubsystem.runIndexOneForward(0.3);
             m_indexSubsystem.runIndexTwoForward(0.3);
             m_turretSubsystem.shoot(0.5);
 
         },  
-        () -> {
+        
+        m_indexSubsystem, m_turretSubsystem // Require both subsystems
+    )).onFalse(new RunCommand(() -> {
             m_indexSubsystem.runIndexOneForward(0);
             m_indexSubsystem.runIndexTwoForward(0);
-            m_turretSubsystem.shoot(0);
-        },
-        m_indexSubsystem, m_turretSubsystem // Require both subsystems
-    ));
+            m_turretSubsystem.shoot(0.4);
+        }, m_indexSubsystem, m_turretSubsystem).withTimeout(1).andThen(new RunCommand(() -> {
+            m_indexSubsystem.runIndexOneForward(0);
+            m_indexSubsystem.runIndexTwoForward(0);
+            m_turretSubsystem.shoot(0.35);
+        }, m_indexSubsystem, m_turretSubsystem)).withTimeout(1).andThen(new RunCommand(() -> {
+            m_indexSubsystem.runIndexOneForward(0);
+            m_indexSubsystem.runIndexTwoForward(0);
+            m_turretSubsystem.shoot(0.30);
+        }, m_indexSubsystem, m_turretSubsystem)).withTimeout(1).andThen(new RunCommand(() -> {
+            m_indexSubsystem.runIndexOneForward(0);
+            m_indexSubsystem.runIndexTwoForward(0);
+            m_turretSubsystem.shoot(0.25);
+        }, m_indexSubsystem, m_turretSubsystem)));
 
-new JoystickButton(m_driverController, XboxController.Button.kRightBumper.value)
-    .whileTrue(new StartEndCommand(
+
+    
+
+new JoystickButton(m_driverController, XboxController.Button.kLeftBumper.value)
+    .onTrue(new StartEndCommand(
         () -> {
             m_intakeSubsystem.extendIntake();
 
@@ -124,7 +139,29 @@ new JoystickButton(m_driverController, XboxController.Button.kRightBumper.value)
            m_intakeSubsystem.stopExtendIntake();
         },
         m_intakeSubsystem // Require both subsystems
-    ));
+    )
+    .withTimeout(0.5)
+    .andThen(new StartEndCommand(
+        () -> {
+            m_intakeSubsystem.runIntakeForward(0.3);
+        }, () -> {
+            m_intakeSubsystem.runIntakeForward(0);
+        },
+        m_intakeSubsystem // Require both subsystems
+    ))
+    
+    ).onFalse(new StartEndCommand(
+        () -> {
+            m_intakeSubsystem.retractIntake();
+
+        },  
+        () -> {
+           m_intakeSubsystem.stopExtendIntake();
+        },
+        m_intakeSubsystem // Require both subsystems
+    )
+    .withTimeout(0.5)
+    );
 
     // new JoystickButton(m_driverController, XboxController.Button.kA.value)
     // // 1. WHAT HAPPENS WHILE THE BUTTON IS HELD

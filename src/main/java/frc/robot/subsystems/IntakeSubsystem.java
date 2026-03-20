@@ -49,22 +49,25 @@ public class IntakeSubsystem extends SubsystemBase {
   }
 
   public void runIntakeForward(double speed){
-    intakeMotor.set(speed);
+        System.out.println("intaking");
+
+    intakeMotor.set(-speed);
   }
 
   
   public void runIntakeReverse(double speed){
-    intakeMotor.set(-speed);
+    intakeMotor.set(speed);
   }
 
   public void extendIntake(){
-    intakePistonMotorOne.set(0.5);
-    intakePistonMotorTwo.set(-0.5);
+    System.out.println("extending");
+    intakePistonMotorOne.set(-0.5);
+    intakePistonMotorTwo.set(0.5);
   }
 
   public void retractIntake(){
-    intakePistonMotorOne.set(-0.5);
-    intakePistonMotorTwo.set(0.5);
+    intakePistonMotorOne.set(0.5);
+    intakePistonMotorTwo.set(-0.5);
   }
 
   public void stopExtendIntake(){
