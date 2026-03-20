@@ -114,36 +114,48 @@ new JoystickButton(m_driverController, XboxController.Button.kRightBumper.value)
         m_indexSubsystem, m_turretSubsystem // Require both subsystems
     ));
 
-    new JoystickButton(m_driverController, XboxController.Button.kA.value)
-    // 1. WHAT HAPPENS WHILE THE BUTTON IS HELD
-    .whileTrue(
-        // Step A: Extend the intake for 2 seconds
-        new StartEndCommand(
-            () -> { m_intakeSubsystem.extendIntake(); },  
-            () -> { m_intakeSubsystem.stopExtendIntake(); }, // Stop extending motors
-            m_intakeSubsystem
-        )
-        .withTimeout(0.5) 
+new JoystickButton(m_driverController, XboxController.Button.kRightBumper.value)
+    .whileTrue(new StartEndCommand(
+        () -> {
+            m_intakeSubsystem.extendIntake();
+
+        },  
+        () -> {
+           m_intakeSubsystem.stopExtendIntake();
+        },
+        m_intakeSubsystem // Require both subsystems
+    ));
+
+    // new JoystickButton(m_driverController, XboxController.Button.kA.value)
+    // // 1. WHAT HAPPENS WHILE THE BUTTON IS HELD
+    // .whileTrue(
+    //     // Step A: Extend the intake for 2 seconds
+    //     new StartEndCommand(
+    //         () -> { m_intakeSubsystem.extendIntake(); },  
+    //         () -> { m_intakeSubsystem.stopExtendIntake(); }, // Stop extending motors
+    //         m_intakeSubsystem
+    //     )
+    //     .withTimeout(0.5) 
         
-        // Step B: After 2 seconds, start intaking 
-        .andThen(
-            new RunCommand(
-                () -> { m_intakeSubsystem.runIntakeForward(1);; }, 
-                m_intakeSubsystem
-            )
-        )
-    )
+    //     // Step B: After 2 seconds, start intaking 
+    //     .andThen(
+    //         new RunCommand(
+    //             () -> { m_intakeSubsystem.runIntakeForward(1);; }, 
+    //             m_intakeSubsystem
+    //         )
+    //     )
+    // )
     
-    // 2. WHAT HAPPENS WHEN THE BUTTON IS RELEASED
-    .onFalse(
-        // Step C: Retract the intake
-        new StartEndCommand(
-            () -> { m_intakeSubsystem.retractIntake(); },
-            () -> { m_intakeSubsystem.stopExtendIntake(); }, // Stop retracting motors
-            m_intakeSubsystem
-        )
-        .withTimeout(0.5) // Give it 2 seconds to retract!
-    );
+    // // 2. WHAT HAPPENS WHEN THE BUTTON IS RELEASED
+    // .onFalse(
+    //     // Step C: Retract the intake
+    //     new StartEndCommand(
+    //         () -> { m_intakeSubsystem.retractIntake(); },
+    //         () -> { m_intakeSubsystem.stopExtendIntake(); }, // Stop retracting motors
+    //         m_intakeSubsystem
+    //     )
+    //     .withTimeout(0.5) // Give it 2 seconds to retract!
+    // );
 
 // // Button B: Run Intake and Index One Reverse
 // new JoystickButton(m_driverController, XboxController.Button.kB.value)
