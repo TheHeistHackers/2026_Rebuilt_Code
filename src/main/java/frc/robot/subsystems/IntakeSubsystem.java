@@ -17,11 +17,15 @@ import frc.robot.Constants;
 public class IntakeSubsystem extends SubsystemBase {
 
   private SparkMax intakeMotor;
+  private SparkMax intakePistonMotorOne;
+  private SparkMax intakePistonMotorTwo;
 
   public IntakeSubsystem() {
 
     //Configure the intake
     intakeMotor = new SparkMax(Constants.IntakeConstants.intakeMotorID,MotorType.kBrushless);
+    intakePistonMotorOne = new SparkMax(Constants.IntakeConstants.intakePistonMotorOneID, MotorType.kBrushless);
+    intakePistonMotorTwo = new SparkMax(Constants.IntakeConstants.intakePistonMotorTwoID, MotorType.kBrushless);
 
     SparkMaxConfig intakeConfig = new SparkMaxConfig();
 
@@ -52,6 +56,23 @@ public class IntakeSubsystem extends SubsystemBase {
   public void runIntakeReverse(double speed){
     intakeMotor.set(-speed);
   }
+
+  public void extendIntake(){
+    intakePistonMotorOne.set(0.5);
+    intakePistonMotorTwo.set(-0.5);
+  }
+
+  public void retractIntake(){
+    intakePistonMotorOne.set(-0.5);
+    intakePistonMotorTwo.set(0.5);
+  }
+
+  public void stopExtendIntake(){
+    intakePistonMotorOne.set(0);
+    intakePistonMotorTwo.set(0);
+  }
+
+
 
   @Override
   public void periodic() {

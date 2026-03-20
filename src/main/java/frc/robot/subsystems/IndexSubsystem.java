@@ -18,16 +18,12 @@ public class IndexSubsystem extends SubsystemBase {
 
   private SparkMax indexMotorOne;
   private SparkMax indexMotorTwo;
-  private SparkMax indexMotorThree;
-  private SparkMax indexMotorFour;
 
 
   public IndexSubsystem() {
     //Configure the index motors
     indexMotorOne = new SparkMax(Constants.IndexConstants.indexMotorOneID, MotorType.kBrushless);
     indexMotorTwo = new SparkMax(Constants.IndexConstants.indexMotorTwoID, MotorType.kBrushless);
-    indexMotorThree = new SparkMax(Constants.IndexConstants.indexMotorThreeID, MotorType.kBrushless);
-    indexMotorFour = new SparkMax(Constants.IndexConstants.indexMotorFourID, MotorType.kBrushless);
 
     SparkMaxConfig indexConfig = new SparkMaxConfig();
 
@@ -48,9 +44,6 @@ public class IndexSubsystem extends SubsystemBase {
     //This line makes sure the settings are persistant and that we reset the controller to safe defaults
     indexMotorOne.configure(indexConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
     indexMotorTwo.configure(indexConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
-    indexMotorThree.configure(indexConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
-    indexMotorFour.configure(indexConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
-  
   }
 
   public void runIndexOneForward(double speed){
@@ -61,14 +54,6 @@ public class IndexSubsystem extends SubsystemBase {
     indexMotorTwo.set(speed);
   }
 
-  public void runIndexThreeForward(double speed){
-    indexMotorThree.set(speed);
-  }
-
-  public void runIndexFourForward(double speed){
-    indexMotorFour.set(speed);
-  }
-
   public void runIndexOneReverse(double speed){
     indexMotorOne.set(-speed);
   }
@@ -77,13 +62,6 @@ public class IndexSubsystem extends SubsystemBase {
     indexMotorTwo.set(-speed);
   }
 
-  public void runIndexThreeReverse(double speed){
-    indexMotorThree.set(-speed);
-  }
-
-  public void runIndexFourReverse(double speed){
-    indexMotorFour.set(-speed);
-  }
   @Override
   public void periodic() {
     // This method will be called once per scheduler run
