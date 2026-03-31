@@ -21,9 +21,11 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.trajectory.Trajectory;
 import edu.wpi.first.math.trajectory.TrajectoryConfig;
 import edu.wpi.first.math.trajectory.TrajectoryGenerator;
+import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.XboxController;
 import frc.robot.subsystems.IntakeSubsystem;
 import frc.robot.subsystems.TurretSubsystem;
+import frc.robot.subsystems.VisionSubsystem;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.RunCommand;
@@ -38,6 +40,7 @@ public class RobotContainer {
   private final IntakeSubsystem m_intakeSubsystem = new IntakeSubsystem();
   private final IndexSubsystem m_indexSubsystem = new IndexSubsystem();
   private final TurretSubsystem m_turretSubsystem = new TurretSubsystem();
+  private final VisionSubsystem visionSubsystem = new VisionSubsystem(m_robotDrive);
 
   XboxController m_driverController = new XboxController(OIConstants.kDriverControllerPort);
 
@@ -97,7 +100,20 @@ public class RobotContainer {
 //         m_intakeSubsystem, m_indexSubsystem // Require both subsystems
 //     ));
 
-    // Button A: Run Index and Turret Forward
+new JoystickButton(m_driverController, XboxController.Button.kB.value).whileTrue(m_robotDrive.driveToPoseCommand(new Pose2d(1.0, 1.0, Rotation2d.fromDegrees(0))));
+    
+Pose2d hubPose = new Pose2d(8.0, 4.0, new Rotation2d());
+
+// While holding 'A', use joysticks for X/Y, but let code handle rotation
+new JoystickButton(m_driverController, XboxController.Button.kA.value).whileTrue(
+    m_robotDrive.driveAndAimCommand(
+        () -> -m_driverController.getLeftY(), // Forward/Back (Invert Y axis if necessary)
+        () -> -m_driverController.getLeftX(), // Left/Right (Invert X axis if necessary)
+        hubPose
+    )
+);
+
+// Button A: Run Index and Turret Forward
 new JoystickButton(m_driverController, XboxController.Button.kRightBumper.value)
     .onTrue(new RunCommand(
         () -> {

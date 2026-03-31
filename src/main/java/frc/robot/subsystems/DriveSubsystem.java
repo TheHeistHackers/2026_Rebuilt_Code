@@ -7,20 +7,30 @@ package frc.robot.subsystems;
 import edu.wpi.first.hal.FRCNetComm.tInstances;
 import edu.wpi.first.hal.FRCNetComm.tResourceType;
 
+import java.util.function.DoubleSupplier;
+
 import com.studica.frc.AHRS;
 import com.studica.frc.AHRS.NavXComType;
 
 import edu.wpi.first.hal.HAL;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
-import edu.wpi.first.math.kinematics.SwerveDriveOdometry;
+import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.Constants.DriveConstants;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj.smartdashboard.Field2d;
+
+import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.math.controller.ProfiledPIDController;
+import edu.wpi.first.math.trajectory.TrapezoidProfile;
+import edu.wpi.first.wpilibj2.command.Command;
 
 public class DriveSubsystem extends SubsystemBase {
   // Create MAXSwerveModules
@@ -46,8 +56,8 @@ public class DriveSubsystem extends SubsystemBase {
 
   private final AHRS m_gyro = new AHRS(NavXComType.kMXP_SPI);
 
-  // Odometry class for tracking robot pose
-  SwerveDriveOdometry m_odometry = new SwerveDriveOdometry(
+  // Pose Estimator class for tracking robot pose (replaces Odometry)
+  SwerveDrivePoseEstimator m_poseEstimator = new SwerveDrivePoseEstimator(
       DriveConstants.kDriveKinematics,
       Rotation2d.fromDegrees(-m_gyro.getAngle()),
       new SwerveModulePosition[] {
@@ -55,7 +65,9 @@ public class DriveSubsystem extends SubsystemBase {
           m_frontRight.getPosition(),
           m_rearLeft.getPosition(),
           m_rearRight.getPosition()
-      });
+      },
+      new Pose2d() // Initial starting pose
+  );
 
   /** Creates a new DriveSubsystem. */
   public DriveSubsystem() {
@@ -63,10 +75,13 @@ public class DriveSubsystem extends SubsystemBase {
     HAL.report(tResourceType.kResourceType_RobotDrive, tInstances.kRobotDriveSwerve_MaxSwerve);
   }
 
+        private final Field2d m_field = new Field2d();
+
+
   @Override
   public void periodic() {
-    // Update the odometry in the periodic block
-    m_odometry.update(
+    // Update the pose estimator with encoder and gyro data
+    m_poseEstimator.update(
         Rotation2d.fromDegrees(-m_gyro.getAngle()),
         new SwerveModulePosition[] {
             m_frontLeft.getPosition(),
@@ -75,14 +90,26 @@ public class DriveSubsystem extends SubsystemBase {
             m_rearRight.getPosition()
         });
     SmartDashboard.putNumber("Gyro Angle", -m_gyro.getAngle());
+    
+// Inside your constructor:
+SmartDashboard.putData("Field", m_field);
+
+// Inside your periodic() method, add this at the end:
+m_field.setRobotPose(m_poseEstimator.getEstimatedPosition());
+
+
+    // Optional but highly recommended: send your exact position to the dashboard!
+    Pose2d currentPose = getPose();
+    SmartDashboard.putNumber("Robot X", currentPose.getX());
+    SmartDashboard.putNumber("Robot Y", currentPose.getY());
   }
 
   public Pose2d getPose() {
-    return m_odometry.getPoseMeters();
+    return m_poseEstimator.getEstimatedPosition();
   }
 
   public void resetOdometry(Pose2d pose) {
-    m_odometry.resetPosition(
+    m_poseEstimator.resetPosition(
         Rotation2d.fromDegrees(-m_gyro.getAngle()),
         new SwerveModulePosition[] {
             m_frontLeft.getPosition(),
@@ -91,6 +118,15 @@ public class DriveSubsystem extends SubsystemBase {
             m_rearRight.getPosition()
         },
         pose);
+  }
+  
+  /**
+   * Updates the robot's position on the field using vision data.
+   * @param visionRobotPoseMeters The calculated X/Y/Rotation from the camera.
+   * @param timestampSeconds When the camera actually took the picture.
+   */
+  public void addVisionMeasurement(Pose2d visionRobotPoseMeters, double timestampSeconds) {
+      m_poseEstimator.addVisionMeasurement(visionRobotPoseMeters, timestampSeconds);
   }
 
   /**
@@ -151,5 +187,84 @@ public class DriveSubsystem extends SubsystemBase {
 
   public double getTurnRate() {
     return m_gyro.getRate() * (DriveConstants.kGyroReversed ? -1.0 : 1.0);
+  }
+
+  /**
+   * Generates a command that drives the robot to a specific Pose2d on the field.
+   * * @param targetPose The desired X, Y, and Rotation on the field.
+   * @return A Command that handles the PID loop to reach the target.
+   */
+  public Command driveToPoseCommand(Pose2d targetPose) {
+    // 1. Create the PID controllers
+    // Note: You will need to tune these P values (the "1.0") for your specific robot
+    PIDController xController = new PIDController(1.0, 0, 0);
+    PIDController yController = new PIDController(1.0, 0, 0);
+    ProfiledPIDController thetaController = new ProfiledPIDController(
+        1.0, 0, 0, new TrapezoidProfile.Constraints(Math.PI, Math.PI));
+
+    // Tell the rotation controller that -180 and 180 degrees are the same place
+    thetaController.enableContinuousInput(-Math.PI, Math.PI);
+
+    // Set tolerances (e.g., within 5cm and 2 degrees)
+    xController.setTolerance(0.05);
+    yController.setTolerance(0.05);
+    thetaController.setTolerance(Math.toRadians(2));
+
+    // 2. Return the constructed command
+    return this.run(() -> {
+      Pose2d currentPose = getPose();
+
+      // Calculate speeds and clamp them between -1.0 and 1.0
+      double xSpeed = MathUtil.clamp(xController.calculate(currentPose.getX(), targetPose.getX()), -1.0, 1.0);
+      double ySpeed = MathUtil.clamp(yController.calculate(currentPose.getY(), targetPose.getY()), -1.0, 1.0);
+      double rotSpeed = MathUtil.clamp(
+          thetaController.calculate(currentPose.getRotation().getRadians(), targetPose.getRotation().getRadians()), 
+          -1.0, 1.0);
+
+      // Drive the robot (field-relative is true)
+      drive(xSpeed, ySpeed, rotSpeed, true);
+
+    })
+    // 3. Stop running when all three PID controllers reach their target
+    .until(() -> xController.atSetpoint() && yController.atSetpoint() && thetaController.atGoal())
+    // 4. Force the robot to stop moving completely when the command finishes or is interrupted
+    .finallyDo(() -> drive(0, 0, 0, true));
+  }
+
+  public Command driveAndAimCommand(DoubleSupplier xSupplier, DoubleSupplier ySupplier, Pose2d targetPose) {
+    // 1. Create a rotation PID controller to snap to the target angle
+    ProfiledPIDController thetaController = new ProfiledPIDController(
+        1.5, 0, 0, // P, I, D (Tune this P value!)
+        new TrapezoidProfile.Constraints(Math.PI * 2, Math.PI * 2) // Max speed and acceleration
+    );
+    
+    // Tell the controller that -180 and 180 degrees are the same
+    thetaController.enableContinuousInput(-Math.PI, Math.PI);
+
+    // 2. Return the command that runs every 20ms
+    return this.run(() -> {
+      // Get the driver's commanded translation speeds
+      double xSpeed = xSupplier.getAsDouble();
+      double ySpeed = ySupplier.getAsDouble();
+
+      // Get current robot pose
+      Pose2d currentPose = getPose();
+
+      // 3. Calculate the angle required to point AT the target
+      Translation2d difference = targetPose.getTranslation().minus(currentPose.getTranslation());
+      Rotation2d targetAngle = difference.getAngle();
+
+      // 4. Calculate the rotation speed using PID to close the gap
+      double rotSpeed = thetaController.calculate(
+          currentPose.getRotation().getRadians(), 
+          targetAngle.getRadians()
+      );
+
+      // Clamp the rotation speed to legal limits [-1.0 to 1.0]
+      rotSpeed = MathUtil.clamp(rotSpeed, -1.0, 1.0);
+
+      // 5. Drive! (Feed joystick translation + automatic rotation)
+      drive(xSpeed, ySpeed, rotSpeed, true);
+    });
   }
 }
