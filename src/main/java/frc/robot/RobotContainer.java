@@ -38,6 +38,7 @@ public class RobotContainer {
   private final IntakeSubsystem m_intakeSubsystem = new IntakeSubsystem();
   private final IndexSubsystem m_indexSubsystem = new IndexSubsystem();
   private final TurretSubsystem m_turretSubsystem = new TurretSubsystem();
+  private final LEDSubsystem m_ledSubsystem = new LEDSubsystem();
 
   XboxController m_driverController = new XboxController(OIConstants.kDriverControllerPort);
 
@@ -99,14 +100,12 @@ public class RobotContainer {
 new JoystickButton(m_driverController, XboxController.Button.kA.value)
     .whileTrue(new StartEndCommand(
         () -> {
-            m_intakeSubsystem.runIntakeForward(0.6);
-            m_indexSubsystem.runIndexOneForward(0.6);
+            m_ledSubsystem.setColor(255, 255, 255);
         },  
         () -> {
-            m_intakeSubsystem.runIntakeForward(0);
-            m_indexSubsystem.runIndexOneForward(0);
+            
         },
-        m_intakeSubsystem, m_indexSubsystem // Require both subsystems
+        m_ledSubsystem // Require both subsystems
     ));
 
 // Button B: Run Intake and Index One Reverse
