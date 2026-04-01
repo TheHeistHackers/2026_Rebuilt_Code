@@ -9,6 +9,7 @@ import frc.robot.Constants.DriveConstants;
 import frc.robot.Constants.OIConstants;
 import frc.robot.subsystems.DriveSubsystem;
 import frc.robot.subsystems.IndexSubsystem;
+import frc.robot.subsystems.LEDSubsystem;
 
 import java.util.List;
 
@@ -97,16 +98,15 @@ public class RobotContainer {
 
 
 // Button A: Run Intake and Index One Forward
-new JoystickButton(m_driverController, XboxController.Button.kA.value)
-    .whileTrue(new StartEndCommand(
-        () -> {
-            m_ledSubsystem.setColor(255, 255, 255);
-        },  
-        () -> {
+// new JoystickButton(m_driverController, XboxController.Button.kA.value)
+//     .whileTrue(new StartEndCommand(
+//         () -> {
+//         },  
+//         () -> {
             
-        },
-        m_ledSubsystem // Require both subsystems
-    ));
+//         },
+//          // Require both subsystems
+//     ));
 
 // Button B: Run Intake and Index One Reverse
 new JoystickButton(m_driverController, XboxController.Button.kB.value)
