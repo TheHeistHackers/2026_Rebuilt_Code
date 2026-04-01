@@ -15,51 +15,74 @@ import java.util.Optional;
 
 public class VisionSubsystem extends SubsystemBase {
     
-    private final PhotonCamera camera = new PhotonCamera("RoundedCamera"); 
-    private final PhotonPoseEstimator poseEstimator;
+    // 1. Define both cameras (Make sure these names perfectly match the PhotonVision UI)
+    private final PhotonCamera frontCamera = new PhotonCamera("RoundedCamera"); 
+    private final PhotonCamera backCamera = new PhotonCamera("SquareCamera"); 
+
+    // 2. Define estimators for both
+    private final PhotonPoseEstimator frontPoseEstimator;
+    private final PhotonPoseEstimator backPoseEstimator;
 
     private final DriveSubsystem driveSubsystem;
 
     public VisionSubsystem(DriveSubsystem driveSubsystem) {
         this.driveSubsystem = driveSubsystem;
-        Transform3d robotToCam = new Transform3d(
+        
+        AprilTagFieldLayout fieldLayout = AprilTagFieldLayout.loadField(AprilTagFields.kDefaultField);
+
+        // ==========================================
+        // CAMERA MEASUREMENTS (Replace with your tape measure values!)
+        // ==========================================
+        
+        // Front Camera: 20cm forward, center of robot, 50cm high, facing straight forward
+        Transform3d frontRobotToCam = new Transform3d(
                 new Translation3d(0.2, 0.0, 0.5), 
                 new Rotation3d(0, 0, 0)
         );
 
-        AprilTagFieldLayout fieldLayout = AprilTagFieldLayout.loadField(AprilTagFields.kDefaultField);
+        // Back Camera: 20cm backward (-0.2), center, 50cm high, facing backward (Math.PI)
+        Transform3d backRobotToCam = new Transform3d(
+                new Translation3d(-0.2, 0.0, 0.5), 
+                new Rotation3d(0, 0, Math.PI) // Math.PI is a 180-degree turn
+        );
 
-        // The updated 2-argument constructor!
-        poseEstimator = new PhotonPoseEstimator(fieldLayout, robotToCam);
+        // Initialize the estimators
+        frontPoseEstimator = new PhotonPoseEstimator(fieldLayout, frontRobotToCam);
+        backPoseEstimator = new PhotonPoseEstimator(fieldLayout, backRobotToCam);
     }
 
     @Override
     public void periodic() {
-        // 1. Get the latest pipeline result from the camera
+        // Process both cameras every loop
+        processCamera(frontCamera, frontPoseEstimator, "Front");
+        processCamera(backCamera, backPoseEstimator, "Back");
+    }
+
+    /**
+     * Helper method to process a single camera's data to prevent duplicate code.
+     */
+    private void processCamera(PhotonCamera camera, PhotonPoseEstimator poseEstimator, String cameraName) {
         var result = camera.getLatestResult();
 
-
-        // 2. Feed that result directly into the multi-tag pose strategy
+        // Feed that result into the multi-tag pose strategy
         Optional<EstimatedRobotPose> estimatedPose = poseEstimator.estimateCoprocMultiTagPose(result);
 
         if (estimatedPose.isEmpty()){
             estimatedPose = poseEstimator.estimateLowestAmbiguityPose(result);
         }
 
-        // 3. If it successfully calculated a position
+        // If it successfully calculated a position
         if (estimatedPose.isPresent()) {
             Pose2d robotFieldPosition = estimatedPose.get().estimatedPose.toPose2d();
-
-            // Extract the exact timestamp the picture was taken
             double imageCaptureTime = estimatedPose.get().timestampSeconds;
 
-            // SEND THE DATA TO THE DRIVETRAIN!
+            // SEND THE DATA TO THE DRIVETRAIN
             driveSubsystem.addVisionMeasurement(robotFieldPosition, imageCaptureTime);
 
-            // Print it to SmartDashboard or Glass
-            SmartDashboard.putNumber("Robot X (Meters)", robotFieldPosition.getX());
-            SmartDashboard.putNumber("Robot Y (Meters)", robotFieldPosition.getY());
-            SmartDashboard.putNumber("Robot Rotation (Deg)", robotFieldPosition.getRotation().getDegrees());
+            // Print it to SmartDashboard to verify which camera is seeing what
+            SmartDashboard.putNumber(cameraName + " Camera/Robot X", robotFieldPosition.getX());
+            SmartDashboard.putNumber(cameraName + " Camera/Robot Y", robotFieldPosition.getY());
+            SmartDashboard.putNumber(cameraName + " Camera/Robot Rot", robotFieldPosition.getRotation().getDegrees());
         }
     }
 }

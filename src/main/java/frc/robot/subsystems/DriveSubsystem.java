@@ -102,6 +102,11 @@ m_field.setRobotPose(m_poseEstimator.getEstimatedPosition());
     Pose2d currentPose = getPose();
     SmartDashboard.putNumber("Robot X", currentPose.getX());
     SmartDashboard.putNumber("Robot Y", currentPose.getY());
+  
+  Pose2d towerPose = new Pose2d(8.0, 4.0, new Rotation2d());
+
+    // Update the dashboard with targeting data every 20ms
+    outputTargetingData(towerPose);
   }
 
   public Pose2d getPose() {
@@ -187,6 +192,35 @@ m_field.setRobotPose(m_poseEstimator.getEstimatedPosition());
 
   public double getTurnRate() {
     return m_gyro.getRate() * (DriveConstants.kGyroReversed ? -1.0 : 1.0);
+  }
+
+public void outputTargetingData(Pose2d targetPose) {
+    Pose2d currentPose = getPose();
+
+    // 1. Calculate Distance to Tower (in meters)
+    double distanceToTower = currentPose.getTranslation().getDistance(targetPose.getTranslation());
+
+    // 2. Calculate the target angle
+    Translation2d difference = targetPose.getTranslation().minus(currentPose.getTranslation());
+    Rotation2d targetAngle = difference.getAngle();
+
+    // 3. Calculate the rotation error (Shortest path to target)
+    // WPILib's .minus() on Rotation2d automatically handles the -180 to 180 boundary
+    Rotation2d rotationError = targetAngle.minus(currentPose.getRotation());
+    double turnAmountDegrees = rotationError.getDegrees();
+
+    // 4. Determine if we need to turn left
+    // In WPILib's coordinate system, counter-clockwise (left) is positive
+    boolean turnLeft = turnAmountDegrees > 0;
+
+    // We take the absolute value so "turn amount" is always a positive magnitude
+    double absoluteTurnAmount = Math.abs(turnAmountDegrees);
+
+
+    // 5. Output the three values to SmartDashboard / Elastic
+    SmartDashboard.putBoolean("Targeting/Turn Left", turnLeft);
+    SmartDashboard.putNumber("Targeting/Turn Amount (Deg)", absoluteTurnAmount);
+    SmartDashboard.putNumber("Targeting/Distance to Tower (Meters)", distanceToTower);
   }
 
   /**
