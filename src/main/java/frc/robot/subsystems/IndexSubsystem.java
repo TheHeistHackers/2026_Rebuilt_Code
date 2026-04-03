@@ -17,13 +17,11 @@ import frc.robot.Constants;
 public class IndexSubsystem extends SubsystemBase {
 
   private SparkMax indexMotorOne;
-  private SparkMax indexMotorTwo;
 
 
   public IndexSubsystem() {
     //Configure the index motors
     indexMotorOne = new SparkMax(Constants.IndexConstants.indexMotorOneID, MotorType.kBrushless);
-    indexMotorTwo = new SparkMax(Constants.IndexConstants.indexMotorTwoID, MotorType.kBrushless);
 
     SparkMaxConfig indexConfig = new SparkMaxConfig();
 
@@ -43,23 +41,14 @@ public class IndexSubsystem extends SubsystemBase {
 
     //This line makes sure the settings are persistant and that we reset the controller to safe defaults
     indexMotorOne.configure(indexConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
-    indexMotorTwo.configure(indexConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
   }
 
   public void runIndexOneForward(double speed){
     indexMotorOne.set(speed);
   }
 
-  public void runIndexTwoForward(double speed){
-    indexMotorTwo.set(speed);
-  }
-
   public void runIndexOneReverse(double speed){
     indexMotorOne.set(-speed);
-  }
-
-  public void runIndexTwoReverse(double speed){
-    indexMotorTwo.set(-speed);
   }
 
   @Override

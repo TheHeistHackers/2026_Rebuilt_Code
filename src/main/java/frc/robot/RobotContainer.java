@@ -73,111 +73,123 @@ public class RobotContainer {
 
 
 // Button A: Run Intake and Index One Forward
-// new JoystickButton(m_driverController, XboxController.Button.kLeftBumper.value)
-//     .whileTrue(new StartEndCommand(
-//         () -> {
-//             m_intakeSubsystem.runIntakeForward(0.3);
-//             m_indexSubsystem.runIndexOneForward(0.3);
-//         },  
-//         () -> {
-//             m_intakeSubsystem.runIntakeForward(0);
-//             m_indexSubsystem.runIndexOneForward(0);
-//         },
-//         m_intakeSubsystem, m_indexSubsystem // Require both subsystems
-//     ));
-
-// // Button B: Run Intake and Index One Reverse
-// new JoystickButton(m_driverController, XboxController.Button.kA.value)
-//     .whileTrue(new StartEndCommand(
-//         () -> {
-//             m_intakeSubsystem.runIntakeReverse(0.3);
-//             m_indexSubsystem.runIndexOneReverse(0.3);
-//         },
-//         () -> {
-//             m_intakeSubsystem.runIntakeReverse(0);
-//             m_indexSubsystem.runIndexOneReverse(0);
-//         },
-//         m_intakeSubsystem, m_indexSubsystem // Require both subsystems
-//     ));
-
-new JoystickButton(m_driverController, XboxController.Button.kB.value).whileTrue(m_robotDrive.driveToPoseCommand(new Pose2d(1.0, 1.0, Rotation2d.fromDegrees(0))));
-    
-Pose2d hubPose = new Pose2d(8.0, 4.0, new Rotation2d());
-
-// While holding 'A', use joysticks for X/Y, but let code handle rotation
-new JoystickButton(m_driverController, XboxController.Button.kA.value).whileTrue(
-    m_robotDrive.driveAndAimCommand(
-        () -> -m_driverController.getLeftY(), // Forward/Back (Invert Y axis if necessary)
-        () -> -m_driverController.getLeftX(), // Left/Right (Invert X axis if necessary)
-        hubPose
-    )
-);
-
-// Button A: Run Index and Turret Forward
-new JoystickButton(m_driverController, XboxController.Button.kRightBumper.value)
-    .onTrue(new RunCommand(
+new JoystickButton(m_driverController, XboxController.Button.kA.value)
+    .whileTrue(new StartEndCommand(
         () -> {
             m_indexSubsystem.runIndexOneForward(0.3);
-            m_indexSubsystem.runIndexTwoForward(0.3);
-            m_turretSubsystem.shoot(0.5);
-
-        },  
-        
-        m_indexSubsystem, m_turretSubsystem // Require both subsystems
-    )).onFalse(new RunCommand(() -> {
-            m_indexSubsystem.runIndexOneForward(0);
-            m_indexSubsystem.runIndexTwoForward(0);
-            m_turretSubsystem.shoot(0.4);
-        }, m_indexSubsystem, m_turretSubsystem).withTimeout(1).andThen(new RunCommand(() -> {
-            m_indexSubsystem.runIndexOneForward(0);
-            m_indexSubsystem.runIndexTwoForward(0);
-            m_turretSubsystem.shoot(0.35);
-        }, m_indexSubsystem, m_turretSubsystem)).withTimeout(1).andThen(new RunCommand(() -> {
-            m_indexSubsystem.runIndexOneForward(0);
-            m_indexSubsystem.runIndexTwoForward(0);
-            m_turretSubsystem.shoot(0.30);
-        }, m_indexSubsystem, m_turretSubsystem)).withTimeout(1).andThen(new RunCommand(() -> {
-            m_indexSubsystem.runIndexOneForward(0);
-            m_indexSubsystem.runIndexTwoForward(0);
-            m_turretSubsystem.shoot(0.25);
-        }, m_indexSubsystem, m_turretSubsystem)));
-
-
-    
-
-new JoystickButton(m_driverController, XboxController.Button.kLeftBumper.value)
-    .onTrue(new StartEndCommand(
-        () -> {
-            m_intakeSubsystem.extendIntake();
-
         },  
         () -> {
-           m_intakeSubsystem.stopExtendIntake();
+            m_indexSubsystem.runIndexOneForward(0);
         },
-        m_intakeSubsystem // Require both subsystems
-    )
-    .withTimeout(0.5)
-    .andThen(new StartEndCommand(
-        () -> {
-            m_intakeSubsystem.runIntakeForward(0.3);
-        }, () -> {
-            m_intakeSubsystem.runIntakeForward(0);
-        },
-        m_intakeSubsystem // Require both subsystems
-    ))
-    
-    ).onFalse(new StartEndCommand(
-        () -> {
-            m_intakeSubsystem.retractIntake();
+        m_indexSubsystem
+    ));
 
-        },  
-        () -> {
-           m_intakeSubsystem.stopExtendIntake();
-        },
-        m_intakeSubsystem // Require both subsystems
-    )
-    .withTimeout(0.5)
+    // Button A: Run Intake and Index One Forward
+new JoystickButton(m_driverController, XboxController.Button.kB.value).whileTrue(
+        new StartEndCommand(
+            () -> m_intakeSubsystem.extendIntake(),   
+            () -> m_intakeSubsystem.retractIntake(),  
+            m_intakeSubsystem                         
+        )
     );
+
+// new JoystickButton(m_driverController, XboxController.Button.kB.value).whileTrue(m_robotDrive.driveToPoseCommand(new Pose2d(1.0, 1.0, Rotation2d.fromDegrees(0))));
+    
+// Pose2d hubPose = new Pose2d(8.0, 4.0, new Rotation2d());
+
+// // While holding 'A', use joysticks for X/Y, but let code handle rotation
+// new JoystickButton(m_driverController, XboxController.Button.kA.value).whileTrue(
+//     m_robotDrive.driveAndAimCommand(
+//         () -> -m_driverController.getLeftY(), // Forward/Back (Invert Y axis if necessary)
+//         () -> -m_driverController.getLeftX(), // Left/Right (Invert X axis if necessary)
+//         hubPose
+//     )
+// );
+
+// Button A: Run Index and Turret Forward
+// new JoystickButton(m_driverController, XboxController.Button.kRightBumper.value)
+//     .onTrue(new RunCommand(
+//         () -> {
+//             m_indexSubsystem.runIndexOneForward(0.3);
+//             m_indexSubsystem.runIndexTwoForward(0.3);
+//             m_turretSubsystem.shoot(0.5);
+
+//         },  
+        
+//         m_indexSubsystem, m_turretSubsystem // Require both subsystems
+//     )).onFalse(new RunCommand(() -> {
+//             m_indexSubsystem.runIndexOneForward(0);
+//             m_indexSubsystem.runIndexTwoForward(0);
+//             m_turretSubsystem.shoot(0.4);
+//         }, m_indexSubsystem, m_turretSubsystem).withTimeout(1).andThen(new RunCommand(() -> {
+//             m_indexSubsystem.runIndexOneForward(0);
+//             m_indexSubsystem.runIndexTwoForward(0);
+//             m_turretSubsystem.shoot(0.35);
+//         }, m_indexSubsystem, m_turretSubsystem)).withTimeout(1).andThen(new RunCommand(() -> {
+//             m_indexSubsystem.runIndexOneForward(0);
+//             m_indexSubsystem.runIndexTwoForward(0);
+//             m_turretSubsystem.shoot(0.30);
+//         }, m_indexSubsystem, m_turretSubsystem)).withTimeout(1).andThen(new RunCommand(() -> {
+//             m_indexSubsystem.runIndexOneForward(0);
+//             m_indexSubsystem.runIndexTwoForward(0);
+//             m_turretSubsystem.shoot(0.25);
+//         }, m_indexSubsystem, m_turretSubsystem)));
+
+
+// Inside RobotContainer.java -> configureBindings()
+
+// When Left Bumper is HELD: Extend the intake AND spin the rollers.
+// When RELEASED: Retract the intake AND stop the rollers.
+new JoystickButton(m_driverController, XboxController.Button.kLeftBumper.value).whileTrue(
+    new StartEndCommand(
+        () -> {
+            // This block runs ONCE when the button is pressed
+            m_intakeSubsystem.extendIntake();
+            m_intakeSubsystem.runIntakeForward(0.3); // Spin the rollers at 30%
+        },  
+        () -> {
+            // This block runs ONCE when the button is released
+            m_intakeSubsystem.retractIntake();
+            m_intakeSubsystem.runIntakeForward(0.0); // Stop the rollers by sending 0 speed
+        },
+        m_intakeSubsystem // Requires the subsystem so no other command interrupts it
+    )
+);
+    
+
+// new JoystickButton(m_driverController, XboxController.Button.kLeftBumper.value)
+//     .onTrue(new StartEndCommand(
+//         () -> {
+//             m_intakeSubsystem.extendIntake();
+
+//         },  
+//         () -> {
+//            m_intakeSubsystem.stopExtendIntake();
+//         },
+//         m_intakeSubsystem // Require both subsystems
+//     )
+//     .withTimeout(0.5)
+//     .andThen(new StartEndCommand(
+//         () -> {
+//             m_intakeSubsystem.runIntakeForward(0.3);
+//         }, () -> {
+//             m_intakeSubsystem.runIntakeForward(0);
+//         },
+//         m_intakeSubsystem // Require both subsystems
+//     ))
+    
+//     ).onFalse(new StartEndCommand(
+//         () -> {
+//             m_intakeSubsystem.retractIntake();
+
+//         },  
+//         () -> {
+//            m_intakeSubsystem.stopExtendIntake();
+//         },
+//         m_intakeSubsystem // Require both subsystems
+//     )
+//     .withTimeout(0.5)
+//     );
 
     // new JoystickButton(m_driverController, XboxController.Button.kA.value)
     // // 1. WHAT HAPPENS WHILE THE BUTTON IS HELD

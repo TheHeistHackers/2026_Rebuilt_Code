@@ -87,13 +87,11 @@ public final class Constants {
 
   public static final class IntakeConstants {
     public static final int intakeMotorID = 21;
-    public static final int intakePistonMotorOneID = 22;
-    public static final int intakePistonMotorTwoID = 23;
+    public static final int intakeExtendMotorID = 22;
   }
 
   public static final class IndexConstants {
     public static final int indexMotorOneID = 31;
-    public static final int indexMotorTwoID = 32;
   }
 
   public static final class TurretConstants {

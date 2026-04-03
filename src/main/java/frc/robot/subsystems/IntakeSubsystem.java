@@ -4,12 +4,17 @@
 
 package frc.robot.subsystems;
 
+import java.util.Set;
+
 import com.revrobotics.PersistMode;
 import com.revrobotics.ResetMode;
+import com.revrobotics.RelativeEncoder; // <-- Updated import
 import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.config.SparkMaxConfig;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
+import com.revrobotics.spark.SparkClosedLoopController;
+import com.revrobotics.spark.SparkBase.ControlType;
 
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
@@ -17,65 +22,75 @@ import frc.robot.Constants;
 public class IntakeSubsystem extends SubsystemBase {
 
   private SparkMax intakeMotor;
-  private SparkMax intakePistonMotorOne;
-  private SparkMax intakePistonMotorTwo;
+  private SparkMax intakeExtendMotor;
+
+  // <-- Updated object type here
+  private RelativeEncoder extendEncoder;
+  private SparkClosedLoopController extendController;
 
   public IntakeSubsystem() {
 
-    //Configure the intake
-    intakeMotor = new SparkMax(Constants.IntakeConstants.intakeMotorID,MotorType.kBrushless);
-    intakePistonMotorOne = new SparkMax(Constants.IntakeConstants.intakePistonMotorOneID, MotorType.kBrushless);
-    intakePistonMotorTwo = new SparkMax(Constants.IntakeConstants.intakePistonMotorTwoID, MotorType.kBrushless);
+    // Configure the intake motors
+    intakeMotor = new SparkMax(Constants.IntakeConstants.intakeMotorID, MotorType.kBrushless);
+    intakeExtendMotor = new SparkMax(Constants.IntakeConstants.intakeExtendMotorID, MotorType.kBrushless);
 
+    // ==========================================
+    // 1. ROLLER MOTOR CONFIGURATION
+    // ==========================================
     SparkMaxConfig intakeConfig = new SparkMaxConfig();
 
-    //  Find the needed parameters
-    // I added the most common ones that all FRC teams use, but the values may need to change
-
-    //Set the brake for when not receiving a command
     intakeConfig.idleMode(IdleMode.kCoast);
-
-    //Smart cutoff, the motor will try to keep this amount of Amperes
     intakeConfig.smartCurrentLimit(35);
-    //The main cutoff - it will never go above it. Hardware breaker is 40A, so set software breaker just below
     intakeConfig.secondaryCurrentLimit(39);
-    //Stabilizes the torgue so that when the battery is fresh it works the same way as if it's not
     intakeConfig.voltageCompensation(12.0);
 
-
-    //This line makes sure the settings are persistant and that we reset the controller to safe defaults
+    // Apply config to the roller motor
     intakeMotor.configure(intakeConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
 
+    // ==========================================
+    // 2. EXTENSION MOTOR CONFIGURATION (1/4 Turn Logic)
+    // ==========================================
+    SparkMaxConfig extendConfig = new SparkMaxConfig();
+    
+    // Usually, mechanisms that hold a position should be in Brake mode
+    extendConfig.idleMode(IdleMode.kBrake); 
+    extendConfig.smartCurrentLimit(30);
+
+    // Configure the PID values directly on the config object (Tune these!)
+    extendConfig.closedLoop
+        .pid(0.1, 0.0, 0.0)
+        .outputRange(-1.0, 1.0);
+
+    // Apply config to the extension motor
+    intakeExtendMotor.configure(extendConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+
+    // Get the encoder and controller objects after configuration
+    extendEncoder = intakeExtendMotor.getEncoder();
+    extendController = intakeExtendMotor.getClosedLoopController();
   }
 
   public void runIntakeForward(double speed){
-        System.out.println("intaking");
-
+    System.out.println("intaking");
     intakeMotor.set(-speed);
   }
-
   
   public void runIntakeReverse(double speed){
     intakeMotor.set(speed);
   }
 
+  // Set absolute target points
+  private final double EXTENDED_POS = 0.25;
+  private final double RETRACTED_POS = 0.0;
+
   public void extendIntake(){
-    System.out.println("extending");
-    intakePistonMotorOne.set(-0.5);
-    intakePistonMotorTwo.set(0.5);
+    System.out.println("Extending to absolute position");
+    extendController.setSetpoint(EXTENDED_POS, ControlType.kPosition);
   }
 
   public void retractIntake(){
-    intakePistonMotorOne.set(0.5);
-    intakePistonMotorTwo.set(-0.5);
+    System.out.println("Retracting to zero");
+    extendController.setSetpoint(RETRACTED_POS, ControlType.kPosition);
   }
-
-  public void stopExtendIntake(){
-    intakePistonMotorOne.set(0);
-    intakePistonMotorTwo.set(0);
-  }
-
-
 
   @Override
   public void periodic() {
