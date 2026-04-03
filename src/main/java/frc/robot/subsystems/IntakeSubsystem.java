@@ -4,8 +4,6 @@
 
 package frc.robot.subsystems;
 
-import java.util.Set;
-
 import com.revrobotics.PersistMode;
 import com.revrobotics.ResetMode;
 import com.revrobotics.RelativeEncoder; // <-- Updated import
@@ -58,7 +56,7 @@ public class IntakeSubsystem extends SubsystemBase {
 
     // Configure the PID values directly on the config object (Tune these!)
     extendConfig.closedLoop
-        .pid(0.1, 0.0, 0.0)
+        .pid(0.07, 0.0, 0.0)
         .outputRange(-1.0, 1.0);
 
     // Apply config to the extension motor
@@ -79,7 +77,7 @@ public class IntakeSubsystem extends SubsystemBase {
   }
 
   // Set absolute target points
-  private final double EXTENDED_POS = 0.25;
+  private final double EXTENDED_POS = -10;
   private final double RETRACTED_POS = 0.0;
 
   public void extendIntake(){

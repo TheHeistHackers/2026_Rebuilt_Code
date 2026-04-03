@@ -23,6 +23,8 @@ import edu.wpi.first.math.trajectory.TrajectoryConfig;
 import edu.wpi.first.math.trajectory.TrajectoryGenerator;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.XboxController;
+import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.subsystems.IntakeSubsystem;
 import frc.robot.subsystems.TurretSubsystem;
 import frc.robot.subsystems.VisionSubsystem;
@@ -31,6 +33,7 @@ import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.StartEndCommand;
 import edu.wpi.first.wpilibj2.command.SwerveControllerCommand;
+import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 
 
@@ -43,6 +46,8 @@ public class RobotContainer {
   private final VisionSubsystem visionSubsystem = new VisionSubsystem(m_robotDrive);
 
   XboxController m_driverController = new XboxController(OIConstants.kDriverControllerPort);
+
+  private final SendableChooser<String> m_chooser = new SendableChooser<>();
 
   public RobotContainer() {
 
@@ -58,7 +63,17 @@ public class RobotContainer {
                 -MathUtil.applyDeadband(m_driverController.getRightX(), OIConstants.kDriveDeadband),
                 true),
             m_robotDrive));
-  }
+
+
+    m_chooser.setDefaultOption("1", "1");
+    m_chooser.addOption("2", "2");
+    m_chooser.addOption("3", "3");
+
+    SmartDashboard.putData("Auto Choices", m_chooser);  
+}
+
+
+
 
   private void configureButtonBindings() {
     new JoystickButton(m_driverController, XboxController.Button.kX.value)
@@ -90,6 +105,14 @@ new JoystickButton(m_driverController, XboxController.Button.kB.value).whileTrue
             () -> m_intakeSubsystem.extendIntake(),   
             () -> m_intakeSubsystem.retractIntake(),  
             m_intakeSubsystem                         
+        )
+    );
+
+    new JoystickButton(m_driverController, XboxController.Button.kY.value).whileTrue(
+        new StartEndCommand(
+            () -> m_turretSubsystem.shoot(0.5),   
+            () -> m_turretSubsystem.shoot(0),  
+            m_turretSubsystem                         
         )
     );
 
@@ -140,19 +163,27 @@ new JoystickButton(m_driverController, XboxController.Button.kB.value).whileTrue
 
 // When Left Bumper is HELD: Extend the intake AND spin the rollers.
 // When RELEASED: Retract the intake AND stop the rollers.
+// When Left Bumper is HELD: Extend, spin intake, and start indexer.
+// When RELEASED: Retract, stop intake, and schedule the indexer to stop 4s later.
 new JoystickButton(m_driverController, XboxController.Button.kLeftBumper.value).whileTrue(
     new StartEndCommand(
         () -> {
-            // This block runs ONCE when the button is pressed
+            // --- RUNS ONCE ON PRESS ---
             m_intakeSubsystem.extendIntake();
-            m_intakeSubsystem.runIntakeForward(0.3); // Spin the rollers at 30%
+            m_intakeSubsystem.runIntakeForward(0.3); 
+            m_indexSubsystem.runIndexOneForward(0.3); // Start indexer immediately
         },  
         () -> {
-            // This block runs ONCE when the button is released
+            // --- RUNS ONCE ON RELEASE ---
             m_intakeSubsystem.retractIntake();
-            m_intakeSubsystem.runIntakeForward(0.0); // Stop the rollers by sending 0 speed
+            m_intakeSubsystem.runIntakeForward(0.0); 
+
+            // Fire-and-forget command: Wait 4 seconds, then stop the indexer
+            new WaitCommand(4.0)
+                .andThen(() -> m_indexSubsystem.runIndexOneForward(0.0), m_indexSubsystem)
+                .schedule(); // <--- This tells WPILib to run this sequence in the background!
         },
-        m_intakeSubsystem // Requires the subsystem so no other command interrupts it
+        m_intakeSubsystem, m_indexSubsystem // Require BOTH subsystems
     )
 );
     
