@@ -6,14 +6,14 @@ package frc.robot.subsystems;
 
 import com.revrobotics.PersistMode;
 import com.revrobotics.ResetMode;
-import com.revrobotics.RelativeEncoder; // <-- Updated import
 import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.config.SparkMaxConfig;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
-import com.revrobotics.spark.SparkClosedLoopController;
-import com.revrobotics.spark.SparkBase.ControlType;
 
+import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.wpilibj.DutyCycleEncoder;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 
@@ -22,9 +22,18 @@ public class IntakeSubsystem extends SubsystemBase {
   private SparkMax intakeMotor;
   private SparkMax intakeExtendMotor;
 
-  // <-- Updated object type here
-  private RelativeEncoder extendEncoder;
-  private SparkClosedLoopController extendController;
+  // roboRIO components for the Absolute Encoder
+  private final DutyCycleEncoder extendEncoder;
+  private final PIDController extendController;
+
+  // Flag to tell the periodic loop when it should be applying PID power
+  private boolean isMovingToPosition = false;
+
+  // IMPORTANT: Since you are now using an absolute encoder, your target points will change.
+  // The DutyCycleEncoder returns rotations (e.g., 0.0 to 1.0). 
+  // You will need to physically move your mechanism and read the encoder values to find these new numbers!
+  private final double EXTENDED_POS = 0.2; // Example target 
+  private final double RETRACTED_POS = 0.0; // Example target
 
   public IntakeSubsystem() {
 
@@ -33,7 +42,19 @@ public class IntakeSubsystem extends SubsystemBase {
     intakeExtendMotor = new SparkMax(Constants.IntakeConstants.intakeExtendMotorID, MotorType.kBrushless);
 
     // ==========================================
-    // 1. ROLLER MOTOR CONFIGURATION
+    // 1. ENCODER & PID INITIALIZATION
+    // ==========================================
+    // Initialize the encoder on the DIO port specified in your Constants (e.g., 0)
+    extendEncoder = new DutyCycleEncoder(Constants.IntakeConstants.encoderDIOPort); 
+    extendEncoder.setPositionOffset(Constants.IntakeConstants.encoderOffset);
+    
+    // Initialize the roboRIO PID Controller (P, I, D) -> You MUST tune these for your mechanism!
+    extendController = new PIDController(0.07, 0.0, 0.0);
+    // Set how close it needs to get to the target before stopping (e.g., 0.01 rotations)
+    extendController.setTolerance(0.01); 
+
+    // ==========================================
+    // 2. ROLLER MOTOR CONFIGURATION
     // ==========================================
     SparkMaxConfig intakeConfig = new SparkMaxConfig();
 
@@ -46,25 +67,18 @@ public class IntakeSubsystem extends SubsystemBase {
     intakeMotor.configure(intakeConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
 
     // ==========================================
-    // 2. EXTENSION MOTOR CONFIGURATION (1/4 Turn Logic)
+    // 3. EXTENSION MOTOR CONFIGURATION
     // ==========================================
     SparkMaxConfig extendConfig = new SparkMaxConfig();
     
-    // Usually, mechanisms that hold a position should be in Brake mode
+    // Brake mode is correct for holding a position
     extendConfig.idleMode(IdleMode.kBrake); 
     extendConfig.smartCurrentLimit(30);
-
-    // Configure the PID values directly on the config object (Tune these!)
-    extendConfig.closedLoop
-        .pid(0.07, 0.0, 0.0)
-        .outputRange(-1.0, 1.0);
+    // Notice: We removed the closedLoop PID configuration from here because 
+    // the SparkMax is no longer doing the math, the roboRIO is.
 
     // Apply config to the extension motor
     intakeExtendMotor.configure(extendConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
-
-    // Get the encoder and controller objects after configuration
-    extendEncoder = intakeExtendMotor.getEncoder();
-    extendController = intakeExtendMotor.getClosedLoopController();
   }
 
   public void runIntakeForward(double speed){
@@ -76,22 +90,48 @@ public class IntakeSubsystem extends SubsystemBase {
     intakeMotor.set(speed);
   }
 
-  // Set absolute target points
-  private final double EXTENDED_POS = -10;
-  private final double RETRACTED_POS = 0.0;
-
   public void extendIntake(){
     System.out.println("Extending to absolute position");
-    extendController.setSetpoint(EXTENDED_POS, ControlType.kPosition);
+    extendController.setSetpoint(EXTENDED_POS);
+    isMovingToPosition = true;
   }
 
   public void retractIntake(){
     System.out.println("Retracting to zero");
-    extendController.setSetpoint(RETRACTED_POS, ControlType.kPosition);
+    extendController.setSetpoint(RETRACTED_POS);
+    isMovingToPosition = true;
+  }
+
+  /**
+   * Stops the extension motor and disables the PID loop
+   */
+  public void stopExtension() {
+    isMovingToPosition = false;
+    intakeExtendMotor.set(0);
   }
 
   @Override
   public void periodic() {
-    // This method will be called once per scheduler run
+    // If the subsystem was told to move to a position, run the PID math here
+    if (isMovingToPosition) {
+      
+      // Get the current position from the DIO absolute encoder
+      double currentPos = extendEncoder.get(); 
+      
+      // Calculate how much power the motor needs to reach the setpoint
+      double motorPower = extendController.calculate(currentPos);
+
+      // Check if the mechanism has reached the target (within the tolerance set earlier)
+      if (extendController.atSetpoint()) {
+          stopExtension();
+      } else {
+          // Clamp the motor output between -0.5 and 0.5 so it doesn't slam into physical stops while you are tuning P, I, and D.
+          // You can expand this range to -1.0 and 1.0 once your PID is safely tuned.
+          intakeExtendMotor.set(MathUtil.clamp(motorPower, -0.5, 0.5));
+      }
+    }
+
+      System.out.println("Current Extend Position: " + extendEncoder.get());
+
   }
 }
