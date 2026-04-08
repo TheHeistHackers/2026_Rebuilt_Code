@@ -45,8 +45,11 @@ public class IntakeSubsystem extends SubsystemBase {
     // 1. ENCODER & PID INITIALIZATION
     // ==========================================
     // Initialize the encoder on the DIO port specified in your Constants (e.g., 0)
-    extendEncoder = new DutyCycleEncoder(Constants.IntakeConstants.encoderDIOPort); 
-    extendEncoder.setPositionOffset(Constants.IntakeConstants.encoderOffset);
+    extendEncoder = new DutyCycleEncoder(
+      Constants.IntakeConstants.encoderDIOPort, 
+  1.0,                                      // Full range (1.0 means 1 full rotation)
+      Constants.IntakeConstants.encoderOffset   // The reading where you expect "0.0" to be
+);
     
     // Initialize the roboRIO PID Controller (P, I, D) -> You MUST tune these for your mechanism!
     extendController = new PIDController(0.07, 0.0, 0.0);

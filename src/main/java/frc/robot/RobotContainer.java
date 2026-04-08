@@ -26,6 +26,7 @@ import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.subsystems.IntakeSubsystem;
+import frc.robot.subsystems.LEDSubsystem;
 import frc.robot.subsystems.TurretSubsystem;
 import frc.robot.subsystems.VisionSubsystem;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -44,6 +45,8 @@ public class RobotContainer {
   private final IndexSubsystem m_indexSubsystem = new IndexSubsystem();
   private final TurretSubsystem m_turretSubsystem = new TurretSubsystem();
   private final VisionSubsystem visionSubsystem = new VisionSubsystem(m_robotDrive);
+    private final LEDSubsystem m_ledSubsystem = new LEDSubsystem();
+
 
   XboxController m_driverController = new XboxController(OIConstants.kDriverControllerPort);
 
