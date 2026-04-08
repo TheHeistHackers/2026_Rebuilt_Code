@@ -26,7 +26,6 @@ public class TurretSubsystem extends SubsystemBase {
     turretMotorOne = new SparkFlex(Constants.TurretConstants.turretMotorOneID,MotorType.kBrushless);
     turretMotorTwo = new SparkFlex(Constants.TurretConstants.turretMotorTwoID,MotorType.kBrushless);
 
-
     SparkFlexConfig turretConfig = new SparkFlexConfig();
 
     //  Find the needed parameters

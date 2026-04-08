@@ -97,6 +97,7 @@ public final class Constants {
 
   public static final class IndexConstants {
     public static final int indexMotorOneID = 31;
+    public static final int indexMotorTwoID = 32;
   }
 
   public static final class TurretConstants {

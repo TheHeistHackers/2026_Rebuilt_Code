@@ -45,7 +45,7 @@ public class RobotContainer {
   private final IndexSubsystem m_indexSubsystem = new IndexSubsystem();
   private final TurretSubsystem m_turretSubsystem = new TurretSubsystem();
   private final VisionSubsystem visionSubsystem = new VisionSubsystem(m_robotDrive);
-    private final LEDSubsystem m_ledSubsystem = new LEDSubsystem();
+  private final LEDSubsystem m_ledSubsystem = new LEDSubsystem();
 
 
   XboxController m_driverController = new XboxController(OIConstants.kDriverControllerPort);
@@ -79,10 +79,10 @@ public class RobotContainer {
 
 
   private void configureButtonBindings() {
-    new JoystickButton(m_driverController, XboxController.Button.kX.value)
-        .whileTrue(new RunCommand(
-            () -> m_robotDrive.setX(),
-            m_robotDrive));
+    // new JoystickButton(m_driverController, XboxController.Button.kX.value)
+    //     .whileTrue(new RunCommand(
+    //         () -> m_robotDrive.setX(),
+    //         m_robotDrive));
 
     new JoystickButton(m_driverController, XboxController.Button.kStart.value)
         .onTrue(new InstantCommand(
@@ -94,12 +94,14 @@ public class RobotContainer {
 new JoystickButton(m_driverController, XboxController.Button.kA.value)
     .whileTrue(new StartEndCommand(
         () -> {
+            m_intakeSubsystem.runIntakeForward(0.5);
             m_indexSubsystem.runIndexOneForward(0.3);
         },  
         () -> {
+            m_intakeSubsystem.runIntakeForward(0);
             m_indexSubsystem.runIndexOneForward(0);
         },
-        m_indexSubsystem
+        m_intakeSubsystem, m_indexSubsystem 
     ));
 
     // Button A: Run Intake and Index One Forward
@@ -111,11 +113,20 @@ new JoystickButton(m_driverController, XboxController.Button.kB.value).whileTrue
         )
     );
 
-    new JoystickButton(m_driverController, XboxController.Button.kY.value).whileTrue(
+    new JoystickButton(m_driverController, XboxController.Button.kRightBumper.value).whileTrue(
         new StartEndCommand(
-            () -> m_turretSubsystem.shoot(0.5),   
-            () -> m_turretSubsystem.shoot(0),  
-            m_turretSubsystem                         
+            () -> {
+                m_indexSubsystem.runIndexOneForward(0.3);
+                m_indexSubsystem.runIndexTwoForward(0.3);
+                m_turretSubsystem.shoot(0.5);
+            }    
+                ,   
+            () -> {
+                m_indexSubsystem.runIndexOneForward(0);
+                m_indexSubsystem.runIndexTwoForward(0);
+                m_turretSubsystem.shoot(0);
+            },
+            m_turretSubsystem, m_indexSubsystem                         
         )
     );
 
