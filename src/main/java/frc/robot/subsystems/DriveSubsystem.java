@@ -8,6 +8,7 @@ import edu.wpi.first.hal.FRCNetComm.tInstances;
 import edu.wpi.first.hal.FRCNetComm.tResourceType;
 
 import java.util.function.DoubleSupplier;
+import java.util.function.Supplier;
 
 import com.studica.frc.AHRS;
 import com.studica.frc.AHRS.NavXComType;
@@ -264,9 +265,10 @@ public void outputTargetingData(Pose2d targetPose) {
     // 4. Force the robot to stop moving completely when the command finishes or is interrupted
     .finallyDo(() -> drive(0, 0, 0, true));
   }
-
-  public Command driveAndAimCommand(DoubleSupplier xSupplier, DoubleSupplier ySupplier, Pose2d targetPose) {
-    // 1. Create a rotation PID controller to snap to the target angle
+// 1. CHANGE THIS LINE: Accept a Supplier<Pose2d> instead of a static Pose2d
+  public Command driveAndAimCommand(DoubleSupplier xSupplier, DoubleSupplier ySupplier, Supplier<Pose2d> targetPoseSupplier) {
+    
+    // Create a rotation PID controller to snap to the target angle
     ProfiledPIDController thetaController = new ProfiledPIDController(
         1.5, 0, 0, // P, I, D (Tune this P value!)
         new TrapezoidProfile.Constraints(Math.PI * 2, Math.PI * 2) // Max speed and acceleration
@@ -275,7 +277,7 @@ public void outputTargetingData(Pose2d targetPose) {
     // Tell the controller that -180 and 180 degrees are the same
     thetaController.enableContinuousInput(-Math.PI, Math.PI);
 
-    // 2. Return the command that runs every 20ms
+    // Return the command that runs every 20ms
     return this.run(() -> {
       // Get the driver's commanded translation speeds
       double xSpeed = xSupplier.getAsDouble();
@@ -284,11 +286,18 @@ public void outputTargetingData(Pose2d targetPose) {
       // Get current robot pose
       Pose2d currentPose = getPose();
 
-      // 3. Calculate the angle required to point AT the target
-      Translation2d difference = targetPose.getTranslation().minus(currentPose.getTranslation());
+      // ========================================================
+      // 2. ADD THIS LINE: Fetch the correct pose RIGHT NOW.
+      // This forces the code to check your alliance color 
+      // every single loop while you hold the button!
+      // ========================================================
+      Pose2d activeTargetPose = targetPoseSupplier.get();
+
+      // Calculate the angle required to point AT the target using the activeTargetPose
+      Translation2d difference = activeTargetPose.getTranslation().minus(currentPose.getTranslation());
       Rotation2d targetAngle = difference.getAngle();
 
-      // 4. Calculate the rotation speed using PID to close the gap
+      // Calculate the rotation speed using PID to close the gap
       double rotSpeed = thetaController.calculate(
           currentPose.getRotation().getRadians(), 
           targetAngle.getRadians()
@@ -297,7 +306,7 @@ public void outputTargetingData(Pose2d targetPose) {
       // Clamp the rotation speed to legal limits [-1.0 to 1.0]
       rotSpeed = MathUtil.clamp(rotSpeed, -1.0, 1.0);
 
-      // 5. Drive! (Feed joystick translation + automatic rotation)
+      // Drive! (Feed joystick translation + automatic rotation)
       drive(xSpeed, ySpeed, rotSpeed, true);
     });
   }
