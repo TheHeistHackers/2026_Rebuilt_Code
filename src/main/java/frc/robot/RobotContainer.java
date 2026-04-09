@@ -12,6 +12,9 @@ import frc.robot.subsystems.IndexSubsystem;
 
 import java.util.List;
 
+import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.auto.NamedCommands;
+
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.ProfiledPIDController;
@@ -29,6 +32,7 @@ import frc.robot.subsystems.IntakeSubsystem;
 import frc.robot.subsystems.TurretSubsystem;
 import frc.robot.subsystems.VisionSubsystem;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.StartEndCommand;
@@ -45,11 +49,25 @@ public class RobotContainer {
   private final TurretSubsystem m_turretSubsystem = new TurretSubsystem();
   private final VisionSubsystem visionSubsystem = new VisionSubsystem(m_robotDrive);
 
+  private final SendableChooser<Command> autoChooser;
+
   XboxController m_driverController = new XboxController(OIConstants.kDriverControllerPort);
 
-  private final SendableChooser<String> m_chooser = new SendableChooser<>();
-
   public RobotContainer() {
+
+    NamedCommands.registerCommand("extendIntake", 
+        Commands.runOnce(() -> m_intakeSubsystem.extendIntake(), m_intakeSubsystem)
+    );
+
+    NamedCommands.registerCommand("retractIntake", 
+        Commands.runOnce(() -> m_intakeSubsystem.retractIntake(), m_intakeSubsystem)
+    );
+
+    // 2. Build the auto chooser SECOND
+    autoChooser = AutoBuilder.buildAutoChooser();
+
+    // 3. Push it to the dashboard
+    SmartDashboard.putData("Auto Choices", autoChooser);
 
     configureButtonBindings();
 
@@ -63,13 +81,6 @@ public class RobotContainer {
                 -MathUtil.applyDeadband(m_driverController.getRightX(), OIConstants.kDriveDeadband),
                 true),
             m_robotDrive));
-
-
-    m_chooser.setDefaultOption("1", "1");
-    m_chooser.addOption("2", "2");
-    m_chooser.addOption("3", "3");
-
-    SmartDashboard.putData("Auto Choices", m_chooser);  
 }
 
 
@@ -271,44 +282,7 @@ new JoystickButton(m_driverController, XboxController.Button.kLeftBumper.value).
 }
 
 public Command getAutonomousCommand() {
-    // Create config for trajectory
-    TrajectoryConfig config = new TrajectoryConfig(
-        AutoConstants.kMaxSpeedMetersPerSecond,
-        AutoConstants.kMaxAccelerationMetersPerSecondSquared)
-        // Add kinematics to ensure max speed is actually obeyed
-        .setKinematics(DriveConstants.kDriveKinematics);
-
-    // An example trajectory to follow. All units in meters.
-    Trajectory exampleTrajectory = TrajectoryGenerator.generateTrajectory(
-        // Start at the origin facing the +X direction
-        new Pose2d(0, 0, new Rotation2d(0)),
-        // Pass through these two interior waypoints, making an 's' curve path
-        List.of(new Translation2d(1, 1), new Translation2d(2, -1)),
-        // End 3 meters straight ahead of where we started, facing forward
-        new Pose2d(3, 0, new Rotation2d(0)),
-        config);
-
-    var thetaController = new ProfiledPIDController(
-        AutoConstants.kPThetaController, 0, 0, AutoConstants.kThetaControllerConstraints);
-    thetaController.enableContinuousInput(-Math.PI, Math.PI);
-
-    SwerveControllerCommand swerveControllerCommand = new SwerveControllerCommand(
-        exampleTrajectory,
-        m_robotDrive::getPose, // Functional interface to feed supplier
-        DriveConstants.kDriveKinematics,
-
-        // Position controllers
-        new PIDController(AutoConstants.kPXController, 0, 0),
-        new PIDController(AutoConstants.kPYController, 0, 0),
-        thetaController,
-        m_robotDrive::setModuleStates,
-        m_robotDrive);
-
-    // Reset odometry to the starting pose of the trajectory.
-    m_robotDrive.resetOdometry(exampleTrajectory.getInitialPose());
-
-    // Run path following command, then stop at the end.
-    return swerveControllerCommand.andThen(() -> m_robotDrive.drive(0, 0, 0, false));
+    return autoChooser.getSelected();
   }
 
 }
