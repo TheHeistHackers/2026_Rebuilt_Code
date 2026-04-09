@@ -153,6 +153,9 @@ public class RobotContainer {
             () -> m_robotDrive.zeroHeading(),
             m_robotDrive));
 
+    // ==========================================
+    // If things go bad, uncomment this and comment the rest
+    // ==========================================
 
 // Button A: Run Intake and Index One Forward
 // new JoystickButton(m_driverController, XboxController.Button.kA.value)
@@ -165,15 +168,6 @@ public class RobotContainer {
 //         },
 //         m_hoodSubsystem 
 //     ));
-
-//     // Button A: Run Intake and Index One Forward
-// new JoystickButton(m_driverController, XboxController.Button.kB.value).whileTrue(
-//         new StartEndCommand(
-//             () -> m_intakeSubsystem.extendIntake(),   
-//             () -> m_intakeSubsystem.retractIntake(),  
-//             m_intakeSubsystem                         
-//         )
-//     );
 
 
     // ==========================================
@@ -256,29 +250,6 @@ public class RobotContainer {
     );
 
 
-    new JoystickButton(m_driverController, XboxController.Button.kRightBumper.value).whileTrue(
-    // 1. Start the shooter immediately
-    Commands.runOnce(() -> {
-        m_turretSubsystem.shootRPM(6000);
-        m_hoodSubsystem.setHoodPosition(0.48); // <-- Added hood command here
-    }, m_turretSubsystem, m_hoodSubsystem)     // <-- Added m_hoodSubsystem as a requirement)
-        
-        // 2. Wait exactly 1.0 seconds
-        .andThen(Commands.waitSeconds(1.0))
-        
-        // 3. Turn on the indexer to feed the note
-        .andThen(Commands.run(() -> {
-            m_indexSubsystem.runIndexOneForward(0.3);
-            m_indexSubsystem.runIndexTwoReverse(1);
-        }, m_indexSubsystem))
-        
-        // 4. When the button is released (or interrupted), stop EVERYTHING
-        .finallyDo(() -> {
-            m_indexSubsystem.runIndexOneForward(0);
-            m_indexSubsystem.runIndexTwoReverse(0);
-            m_turretSubsystem.stopShooter();
-        })
-);
 
 // new JoystickButton(m_driverController, XboxController.Button.kB.value).whileTrue(m_robotDrive.driveToPoseCommand(new Pose2d(1.0, 1.0, Rotation2d.fromDegrees(0))));
     
@@ -337,6 +308,37 @@ public class RobotContainer {
             })
         )
     );
+
+    // ==========================================
+    // BUTTON 'RIGHT BUMPER' - Shoot
+    // ==========================================
+
+    new JoystickButton(m_driverController, XboxController.Button.kRightBumper.value).whileTrue(
+    // 1. Start the shooter immediately
+    Commands.runOnce(() -> {
+        m_turretSubsystem.shootRPM(6000);
+    }, m_turretSubsystem)     // <-- Added m_hoodSubsystem as a requirement)
+        
+        // 2. Wait exactly 1.0 seconds
+        .andThen(Commands.waitSeconds(1.0))
+        
+        // 3. Turn on the indexer to feed the note
+        .andThen(Commands.run(() -> {
+            m_indexSubsystem.runIndexOneForward(0.3);
+            m_indexSubsystem.runIndexTwoReverse(1);
+        }, m_indexSubsystem))
+        
+        // 4. When the button is released (or interrupted), stop EVERYTHING
+        .finallyDo(() -> {
+            m_indexSubsystem.runIndexOneForward(0);
+            m_indexSubsystem.runIndexTwoReverse(0);
+            m_turretSubsystem.stopShooter();
+        })
+);
+
+    // ==========================================
+    // BUTTON 'LEFT BUMPER' - Intake
+    // ==========================================
 
 // When Left Bumper is HELD: Extend the intake AND spin the rollers.
 // When RELEASED: Retract the intake AND stop the rollers.
