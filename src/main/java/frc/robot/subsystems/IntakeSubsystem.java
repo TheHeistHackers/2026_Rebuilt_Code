@@ -33,8 +33,8 @@ public class IntakeSubsystem extends SubsystemBase {
   // IMPORTANT: Since you are now using an absolute encoder, your target points will change.
   // The DutyCycleEncoder returns rotations (e.g., 0.0 to 1.0). 
   // You will need to physically move your mechanism and read the encoder values to find these new numbers!
-  private final double EXTENDED_POS = -0.3; // Example target 
-  private final double RETRACTED_POS = 0.0; // Example target
+  private final double EXTENDED_POS = 0.38; // Example target 
+  private final double RETRACTED_POS = 0.02; // Example target
 
   public IntakeSubsystem() {
 
@@ -53,9 +53,9 @@ public class IntakeSubsystem extends SubsystemBase {
 );
     
     // Initialize the roboRIO PID Controller (P, I, D) -> You MUST tune these for your mechanism!
-    extendController = new PIDController(0.5, 0.0, 0.0);
+    extendController = new PIDController(1, 0.0, 0.0);
     // Set how close it needs to get to the target before stopping (e.g., 0.01 rotations)
-    extendController.setTolerance(0.05); 
+    extendController.setTolerance(0.03); 
 
     // ==========================================
     // 2. ROLLER MOTOR CONFIGURATION
@@ -80,6 +80,8 @@ public class IntakeSubsystem extends SubsystemBase {
     extendConfig.smartCurrentLimit(30);
     // Notice: We removed the closedLoop PID configuration from here because 
     // the SparkMax is no longer doing the math, the roboRIO is.
+
+    extendConfig.inverted(true);
 
     // Apply config to the extension motor
     intakeExtendMotor.configure(extendConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);

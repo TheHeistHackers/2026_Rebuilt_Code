@@ -30,10 +30,10 @@ public class LEDSubsystem extends SubsystemBase {
     public void periodic() {
         if (DriverStation.isDisabled()) {
             // Slow rainbow pulse when the robot is sitting in the pits/staged
-            runSolidRainbow();
+            // runSolidRainbow();
         } else {
             // Blinks Green. Change the numbers to blink a different color!
-            runBlinkRGB(0, 255, 0); 
+            // runBlinkRGB(0, 255, 0); 
         }
     }
 

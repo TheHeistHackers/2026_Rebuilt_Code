@@ -7,60 +7,140 @@ package frc.robot.subsystems;
 import com.revrobotics.PersistMode;
 import com.revrobotics.ResetMode;
 import com.revrobotics.spark.SparkFlex;
+import com.revrobotics.spark.SparkMax; // Added for the hood motor
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.config.SparkFlexConfig;
+import com.revrobotics.spark.config.SparkMaxConfig; // Added for the hood config
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 
+import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.wpilibj.DutyCycleEncoder;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 
 public class TurretSubsystem extends SubsystemBase {
 
+  // Shooter Motors (Flywheels)
   private SparkFlex turretMotorOne;
   private SparkFlex turretMotorTwo;
 
+  // Hood Motor & Sensors
+  // Assuming a SparkMax for the hood. Change to SparkFlex if using a Vortex!
+  private SparkMax hoodMotor; 
+  private final DutyCycleEncoder hoodEncoder;
+  private final PIDController hoodController;
+
+  // Flag for periodic loop
+  private boolean isMovingHood = false;
 
   public TurretSubsystem() {
 
-    //Configure the intake
-    turretMotorOne = new SparkFlex(Constants.TurretConstants.turretMotorOneID,MotorType.kBrushless);
-    turretMotorTwo = new SparkFlex(Constants.TurretConstants.turretMotorTwoID,MotorType.kBrushless);
+    // ==========================================
+    // 1. SHOOTER FLYWHEEL INITIALIZATION
+    // ==========================================
+    turretMotorOne = new SparkFlex(Constants.TurretConstants.turretMotorOneID, MotorType.kBrushless);
+    turretMotorTwo = new SparkFlex(Constants.TurretConstants.turretMotorTwoID, MotorType.kBrushless);
 
     SparkFlexConfig turretConfig = new SparkFlexConfig();
-
-    //  Find the needed parameters
-    // I added the most common ones that all FRC teams use, but the values may need to change
-
-    //Set the brake for when not receiving a command
     turretConfig.idleMode(IdleMode.kCoast);
-
-    //Smart cutoff, the motor will try to keep this amount of Amperes
     turretConfig.smartCurrentLimit(35);
-    //The main cutoff - it will never go above it. Hardware breaker is 40A, so set software breaker just below
     turretConfig.secondaryCurrentLimit(39);
-    //Stabilizes the torgue so that when the battery is fresh it works the same way as if it's not
     turretConfig.voltageCompensation(12.0);
 
-
-    //This line makes sure the settings are persistant and that we reset the controller to safe defaults
     turretMotorOne.configure(turretConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
     turretMotorTwo.configure(turretConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
 
+    // ==========================================
+    // 2. HOOD ENCODER & PID INITIALIZATION
+    // ==========================================
+    // Initialize the hood motor
+    hoodMotor = new SparkMax(Constants.TurretConstants.hoodMotorID, MotorType.kBrushless);
+
+    // Initialize the absolute encoder
+    hoodEncoder = new DutyCycleEncoder(
+      Constants.TurretConstants.hoodEncoderDIOPort, 
+      1.0, 
+      Constants.TurretConstants.hoodEncoderOffset
+    );
+    
+    // Initialize the PID Controller (Start conservative with P=1.0)
+    hoodController = new PIDController(1.0, 0.0, 0.0);
+    hoodController.setTolerance(0.02); // Tighter tolerance since hoods usually require precision
+
+    // ==========================================
+    // 3. HOOD MOTOR CONFIGURATION
+    // ==========================================
+    SparkMaxConfig hoodConfig = new SparkMaxConfig();
+    
+    hoodConfig.idleMode(IdleMode.kBrake); // Hold position firmly against gravity/vibrations
+    hoodConfig.smartCurrentLimit(20);     // Hoods usually need less current, adjust as necessary
+    
+    // You may need to invert this depending on your physical gearing!
+    hoodConfig.inverted(true); 
+
+    hoodMotor.configure(hoodConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
   }
 
+  // ==========================================
+  // SHOOTER COMMANDS
+  // ==========================================
   public void shoot(double speed){
     turretMotorOne.set(speed);
     turretMotorTwo.set(-speed);
   }
-
   
   public void shootReverse(double speed){
     turretMotorOne.set(-speed);
     turretMotorTwo.set(speed);
   }
 
+  // ==========================================
+  // HOOD COMMANDS
+  // ==========================================
+  public void raiseHood() {
+    System.out.println("Raising Hood - max");
+    hoodController.setSetpoint(0.95);
+    isMovingHood = true;
+  }
+
+  public void lowerHood() {
+    System.out.println("Lowering Hood");
+    hoodController.setSetpoint(-0.05);
+    isMovingHood = true;
+  }
+
+  public void stopHood() {
+    isMovingHood = false;
+    hoodMotor.set(0);
+  }
+
   @Override
   public void periodic() {
-    // This method will be called once per scheduler run
+    // 1. Always read the sensor
+    double currentHoodPos = hoodEncoder.get(); 
+
+    // 2. Handle PID Movement
+    if (isMovingHood) {
+      double motorPower = hoodController.calculate(currentHoodPos);
+
+      if (hoodController.atSetpoint()) {
+          stopHood();
+      } else {
+          // Clamp power for safety while tuning
+          hoodMotor.set(MathUtil.clamp(motorPower, -0.4, 0.4));
+      }
+    }
+
+    // =========================================================
+    // SMARTDASHBOARD DEBUGGING (Organized into a "Hood" folder)
+    // =========================================================
+    SmartDashboard.putNumber("Hood/Current_Position", currentHoodPos);
+    SmartDashboard.putBoolean("Hood/Is_Moving", isMovingHood);
+    SmartDashboard.putNumber("Hood/Target_Setpoint", hoodController.getSetpoint());
+    SmartDashboard.putNumber("Hood/Position_Error", hoodController.getPositionError());
+    SmartDashboard.putBoolean("Hood/At_Setpoint", hoodController.atSetpoint());
+    SmartDashboard.putNumber("Hood/Applied_Motor_Power", hoodMotor.get());
   }
 }
