@@ -8,6 +8,7 @@ import frc.robot.Constants.AutoConstants;
 import frc.robot.Constants.DriveConstants;
 import frc.robot.Constants.OIConstants;
 import frc.robot.subsystems.DriveSubsystem;
+import frc.robot.subsystems.HoodSubsystem;
 import frc.robot.subsystems.IndexSubsystem;
 
 import java.util.List;
@@ -45,6 +46,7 @@ public class RobotContainer {
   private final IndexSubsystem m_indexSubsystem = new IndexSubsystem();
   private final TurretSubsystem m_turretSubsystem = new TurretSubsystem();
   private final VisionSubsystem visionSubsystem = new VisionSubsystem(m_robotDrive);
+  private final HoodSubsystem m_hoodSubsystem = new HoodSubsystem();
   //private final LEDSubsystem m_ledSubsystem = new LEDSubsystem();
 
 
@@ -94,12 +96,12 @@ public class RobotContainer {
 new JoystickButton(m_driverController, XboxController.Button.kA.value)
     .whileTrue(new StartEndCommand(
         () -> {
-            m_turretSubsystem.raiseHood();
+            m_hoodSubsystem.raiseHood();
         },  
         () -> {
-            // m_turretSubsystem.lowerHood();
+            m_hoodSubsystem.lowerHood();
         },
-        m_turretSubsystem 
+        m_hoodSubsystem 
     ));
 
     // Button A: Run Intake and Index One Forward
@@ -116,13 +118,13 @@ new JoystickButton(m_driverController, XboxController.Button.kB.value).whileTrue
             () -> {
                 m_indexSubsystem.runIndexOneForward(0.3);
                 m_indexSubsystem.runIndexTwoReverse(1);
-                m_turretSubsystem.shoot(1);
+                m_turretSubsystem.shootRPM(6000);
             }    
                 ,   
             () -> {
                 m_indexSubsystem.runIndexOneForward(0);
                 m_indexSubsystem.runIndexTwoReverse(0);
-                m_turretSubsystem.shoot(0);
+                m_turretSubsystem.stopShooter();
             },
             m_turretSubsystem, m_indexSubsystem                         
         )

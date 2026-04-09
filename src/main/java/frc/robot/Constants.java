@@ -106,6 +106,6 @@ public final class Constants {
 
     public static final int hoodMotorID = 43;
     public static final int hoodEncoderDIOPort = 3;
-    public static final double hoodEncoderOffset = 0.86;
+    public static final double hoodEncoderOffset = 0.36;
   }
 }
