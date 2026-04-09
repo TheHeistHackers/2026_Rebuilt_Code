@@ -14,6 +14,7 @@ import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.wpilibj.DutyCycleEncoder;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 
@@ -32,7 +33,7 @@ public class IntakeSubsystem extends SubsystemBase {
   // IMPORTANT: Since you are now using an absolute encoder, your target points will change.
   // The DutyCycleEncoder returns rotations (e.g., 0.0 to 1.0). 
   // You will need to physically move your mechanism and read the encoder values to find these new numbers!
-  private final double EXTENDED_POS = 0.2; // Example target 
+  private final double EXTENDED_POS = -0.3; // Example target 
   private final double RETRACTED_POS = 0.0; // Example target
 
   public IntakeSubsystem() {
@@ -52,9 +53,9 @@ public class IntakeSubsystem extends SubsystemBase {
 );
     
     // Initialize the roboRIO PID Controller (P, I, D) -> You MUST tune these for your mechanism!
-    extendController = new PIDController(0.07, 0.0, 0.0);
+    extendController = new PIDController(0.5, 0.0, 0.0);
     // Set how close it needs to get to the target before stopping (e.g., 0.01 rotations)
-    extendController.setTolerance(0.01); 
+    extendController.setTolerance(0.05); 
 
     // ==========================================
     // 2. ROLLER MOTOR CONFIGURATION
@@ -134,7 +135,30 @@ public class IntakeSubsystem extends SubsystemBase {
       }
     }
 
-      System.out.println("Current Extend Position: " + extendEncoder.get());
+    // =========================================================
+    // SMARTDASHBOARD DEBUGGING
+    // =========================================================
+    // Note: Adding "Intake/" before the names automatically groups them 
+    // into a neat little folder in Shuffleboard and Glass!
 
+    // Sensor Data
+    SmartDashboard.putNumber("Intake/Current_Position", extendEncoder.get());
+    
+    // PID State
+    SmartDashboard.putBoolean("Intake/Is_Moving", isMovingToPosition);
+    SmartDashboard.putNumber("Intake/Target_Setpoint", extendController.getSetpoint());
+    
+    // Position Error: This is (Setpoint - Current_Position). 
+    // Graphing this in Shuffleboard is the easiest way to tune P, I, and D! 
+    // You want to see this line hit 0 as smoothly and quickly as possible.
+    SmartDashboard.putNumber("Intake/Position_Error", extendController.getPositionError());
+    SmartDashboard.putBoolean("Intake/At_Setpoint", extendController.atSetpoint());
+
+    // Hardware Outputs
+    // .get() returns the actual clamped power currently being sent to the motor (-1.0 to 1.0)
+    SmartDashboard.putNumber("Intake/Applied_Motor_Power", intakeExtendMotor.get());
+
+    // You can remove the System.out.println to prevent console spam, 
+    // as SmartDashboard is much easier to read!
   }
 }

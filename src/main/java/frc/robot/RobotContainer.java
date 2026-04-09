@@ -117,13 +117,13 @@ new JoystickButton(m_driverController, XboxController.Button.kB.value).whileTrue
         new StartEndCommand(
             () -> {
                 m_indexSubsystem.runIndexOneForward(0.3);
-                m_indexSubsystem.runIndexTwoForward(0.3);
+                m_indexSubsystem.runIndexTwoReverse(0.3);
                 m_turretSubsystem.shoot(0.5);
             }    
                 ,   
             () -> {
                 m_indexSubsystem.runIndexOneForward(0);
-                m_indexSubsystem.runIndexTwoForward(0);
+                m_indexSubsystem.runIndexTwoReverse(0);
                 m_turretSubsystem.shoot(0);
             },
             m_turretSubsystem, m_indexSubsystem                         
