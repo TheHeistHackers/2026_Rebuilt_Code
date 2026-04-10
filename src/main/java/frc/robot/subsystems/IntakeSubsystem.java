@@ -14,6 +14,7 @@ import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.wpilibj.DutyCycleEncoder;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
@@ -35,6 +36,10 @@ public class IntakeSubsystem extends SubsystemBase {
   // You will need to physically move your mechanism and read the encoder values to find these new numbers!
   private final double EXTENDED_POS = 0.38; // Example target 
   private final double RETRACTED_POS = 0.02; // Example target
+
+
+  private final Timer movementTimer = new Timer(); // 1. Added Timer object
+  private final double MOVEMENT_TIMEOUT = 7.0;    // 2. Define the 7s limit
 
   public IntakeSubsystem() {
 
@@ -95,16 +100,25 @@ public class IntakeSubsystem extends SubsystemBase {
   public void runIntakeReverse(double speed){
     intakeMotor.set(speed);
   }
-
-  public void extendIntake(){
+public void extendIntake(){
     System.out.println("Extending to absolute position");
     extendController.setSetpoint(EXTENDED_POS);
+    
+    // 3. Reset and start timer whenever a move starts
+    movementTimer.reset();
+    movementTimer.start();
+    
     isMovingToPosition = true;
   }
 
   public void retractIntake(){
     System.out.println("Retracting to zero");
     extendController.setSetpoint(RETRACTED_POS);
+    
+    // 3. Reset and start timer whenever a move starts
+    movementTimer.reset();
+    movementTimer.start();
+    
     isMovingToPosition = true;
   }
 
@@ -113,26 +127,27 @@ public class IntakeSubsystem extends SubsystemBase {
    */
   public void stopExtension() {
     isMovingToPosition = false;
+    movementTimer.stop(); // 4. Stop the timer
     intakeExtendMotor.set(0);
   }
 
   @Override
   public void periodic() {
-    // If the subsystem was told to move to a position, run the PID math here
     if (isMovingToPosition) {
       
-      // Get the current position from the DIO absolute encoder
+      // 5. Check for timeout
+      if (movementTimer.hasElapsed(MOVEMENT_TIMEOUT)) {
+          System.out.println("Intake Move TIMEOUT reached! Stopping.");
+          stopExtension();
+          return; // Exit early so we don't run the PID logic below
+      }
+
       double currentPos = extendEncoder.get(); 
-      
-      // Calculate how much power the motor needs to reach the setpoint
       double motorPower = extendController.calculate(currentPos);
 
-      // Check if the mechanism has reached the target (within the tolerance set earlier)
       if (extendController.atSetpoint()) {
           stopExtension();
       } else {
-          // Clamp the motor output between -0.5 and 0.5 so it doesn't slam into physical stops while you are tuning P, I, and D.
-          // You can expand this range to -1.0 and 1.0 once your PID is safely tuned.
           intakeExtendMotor.set(MathUtil.clamp(motorPower, -0.5, 0.5));
       }
     }
@@ -162,5 +177,8 @@ public class IntakeSubsystem extends SubsystemBase {
 
     // You can remove the System.out.println to prevent console spam, 
     // as SmartDashboard is much easier to read!
+
+
+    SmartDashboard.putNumber("Intake/Move_Timer", movementTimer.get());
   }
 }
