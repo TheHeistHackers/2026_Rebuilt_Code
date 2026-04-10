@@ -38,13 +38,13 @@ public class VisionSubsystem extends SubsystemBase {
 
         // Front Camera: 20cm forward, center of robot, 50cm high, facing straight forward
         Transform3d frontRobotToCam = new Transform3d(
-                new Translation3d(0.305, -0.044, 0.438), 
+                new Translation3d(0.2921, -0.1143, 0.4318), 
                 new Rotation3d(0, 0, 0)
         );
 
         // Back Camera: 20cm backward (-0.2), center, 50cm high, facing backward (Math.PI)
         Transform3d backRobotToCam = new Transform3d(
-                new Translation3d(-0.279, 0.0, 0.425), 
+                new Translation3d(-0.22225, -0.32385, 0.38), 
                 new Rotation3d(0, 0, Math.PI) // Math.PI is a 180-degree turn
         );
 
