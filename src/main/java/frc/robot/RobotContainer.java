@@ -231,6 +231,7 @@ public class RobotContainer {
                 m_intakeSubsystem.runIntakeForward(0.0);
                 m_turretSubsystem.stopShooter();
                 m_indexSubsystem.runIndexTwoReverse(0.0);
+                m_hoodSubsystem.lowerHood();
                 
                 Commands.waitSeconds(4.0)
                     .andThen(Commands.runOnce(() -> m_indexSubsystem.runIndexOneForward(0.0), m_indexSubsystem))
@@ -310,6 +311,7 @@ public class RobotContainer {
                 // <-- Removed intake retract commands from here
                 m_turretSubsystem.stopShooter();
                 m_indexSubsystem.runIndexTwoReverse(0.0);
+                m_hoodSubsystem.lowerHood();
                 
                 Commands.waitSeconds(4.0)
                     .andThen(Commands.runOnce(() -> m_indexSubsystem.runIndexOneForward(0.0), m_indexSubsystem))
