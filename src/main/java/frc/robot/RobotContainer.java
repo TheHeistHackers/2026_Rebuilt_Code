@@ -8,6 +8,7 @@ import frc.robot.Constants.AutoConstants;
 import frc.robot.Constants.DriveConstants;
 import frc.robot.Constants.OIConstants;
 import frc.robot.subsystems.DriveSubsystem;
+import frc.robot.subsystems.HoodSubsystem;
 import frc.robot.subsystems.IndexSubsystem;
 
 import java.util.List;
@@ -29,6 +30,7 @@ import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.subsystems.IntakeSubsystem;
+import frc.robot.subsystems.LEDSubsystem;
 import frc.robot.subsystems.TurretSubsystem;
 import frc.robot.subsystems.VisionSubsystem;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -40,6 +42,8 @@ import edu.wpi.first.wpilibj2.command.SwerveControllerCommand;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 
+import edu.wpi.first.wpilibj.DriverStation;
+
 
 public class RobotContainer {
   // The robot's subsystems and commands are defined here...
@@ -48,6 +52,9 @@ public class RobotContainer {
   private final IndexSubsystem m_indexSubsystem = new IndexSubsystem();
   private final TurretSubsystem m_turretSubsystem = new TurretSubsystem();
   private final VisionSubsystem visionSubsystem = new VisionSubsystem(m_robotDrive);
+  private final HoodSubsystem m_hoodSubsystem = new HoodSubsystem();
+  private final LEDSubsystem m_ledSubsystem = new LEDSubsystem();
+
 
   private final SendableChooser<Command> autoChooser;
 
@@ -84,93 +91,263 @@ public class RobotContainer {
 }
 
 
+// Define both target locations (You will need to measure/find the exact Red X/Y!)
+
+// ==========================================
+  // FIELD TARGETS (You must tune these X/Y values!)
+  // ==========================================
+  private final Pose2d BLUE_HUB_POSE = new Pose2d(4.611624, 4.0132, new Rotation2d());
+  private final Pose2d RED_HUB_POSE  = new Pose2d(11.9126, 4.0132, new Rotation2d()); // Example coordinates
+
+  // Blue Alliance Trenches
+  private final Pose2d BLUE_TRENCH_1 = new Pose2d(5.0, 2.0, new Rotation2d());
+  private final Pose2d BLUE_TRENCH_2 = new Pose2d(5.0, 6.0, new Rotation2d());
+
+  // Red Alliance Trenches
+  private final Pose2d RED_TRENCH_1 = new Pose2d(11.5, 2.0, new Rotation2d());
+  private final Pose2d RED_TRENCH_2 = new Pose2d(11.5, 6.0, new Rotation2d());
+
+  // Standard FRC Field Length (in meters). Verify this matches your game manual!
+  private final double FIELD_LENGTH_METERS = 16.54;
+
+/**
+ * Checks the Driver Station and returns the correct hub pose.
+ */
+/**
+   * Dynamically evaluates the best target based on Alliance Color and Robot Position.
+   */
+  public Pose2d getDynamicTargetPose() {
+      var alliance = DriverStation.getAlliance();
+      boolean isRed = alliance.isPresent() && alliance.get() == DriverStation.Alliance.Red;
+
+      // 1. Get the robot's current position from the Drive Subsystem
+      Pose2d currentPose = m_robotDrive.getPose();
+
+      // 2. Calculate distance from our own alliance wall
+      // Assuming standard WPILib origin where X=0 is Blue Wall, X=16.54 is Red Wall
+      double distanceFromWall = isRed ? (FIELD_LENGTH_METERS - currentPose.getX()) : currentPose.getX();
+
+      // 3. Make the decision
+      if (distanceFromWall > 4.7) {
+          // We are far away. Target the closer of our two trenches.
+          Pose2d trench1 = isRed ? RED_TRENCH_1 : BLUE_TRENCH_1;
+          Pose2d trench2 = isRed ? RED_TRENCH_2 : BLUE_TRENCH_2;
+
+          // Calculate direct line-of-sight distance to both trenches
+          double distToTrench1 = currentPose.getTranslation().getDistance(trench1.getTranslation());
+          double distToTrench2 = currentPose.getTranslation().getDistance(trench2.getTranslation());
+
+          // Return whichever trench is physically closer to the robot
+          return distToTrench1 < distToTrench2 ? trench1 : trench2;
+      } else {
+          // We are close to the wall. Target our Hub.
+          return isRed ? RED_HUB_POSE : BLUE_HUB_POSE;
+      }
+  }
+
+  public double getDistanceToHub() {
+    return m_robotDrive.getPose().getTranslation()
+            .getDistance(getDynamicTargetPose().getTranslation());
+}
+
 
 
   private void configureButtonBindings() {
-    new JoystickButton(m_driverController, XboxController.Button.kX.value)
-        .whileTrue(new RunCommand(
-            () -> m_robotDrive.setX(),
-            m_robotDrive));
+    // new JoystickButton(m_driverController, XboxController.Button.kX.value)
+    //     .whileTrue(new RunCommand(
+    //         () -> m_robotDrive.setX(),
+    //         m_robotDrive));
 
     new JoystickButton(m_driverController, XboxController.Button.kStart.value)
         .onTrue(new InstantCommand(
             () -> m_robotDrive.zeroHeading(),
             m_robotDrive));
 
+    // ==========================================
+    // If things go bad, uncomment this and comment the rest
+    // ==========================================
 
 // Button A: Run Intake and Index One Forward
-new JoystickButton(m_driverController, XboxController.Button.kA.value)
-    .whileTrue(new StartEndCommand(
-        () -> {
-            m_indexSubsystem.runIndexOneForward(0.3);
-        },  
-        () -> {
-            m_indexSubsystem.runIndexOneForward(0);
-        },
-        m_indexSubsystem
-    ));
+// new JoystickButton(m_driverController, XboxController.Button.kA.value)
+//     .whileTrue(new StartEndCommand(
+//         () -> {
+//             m_hoodSubsystem.raiseHood();
+//         },  
+//         () -> {
+//             m_hoodSubsystem.lowerHood();
+//         },
+//         m_hoodSubsystem 
+//     ));
 
-    // Button A: Run Intake and Index One Forward
-new JoystickButton(m_driverController, XboxController.Button.kB.value).whileTrue(
-        new StartEndCommand(
-            () -> m_intakeSubsystem.extendIntake(),   
-            () -> m_intakeSubsystem.retractIntake(),  
-            m_intakeSubsystem                         
-        )
-    );
 
+    // ==========================================
+    // BUTTON 'Y' - Auto-Aim, Shoot, & Dynamic Hood
+    // ==========================================
     new JoystickButton(m_driverController, XboxController.Button.kY.value).whileTrue(
-        new StartEndCommand(
-            () -> m_turretSubsystem.shoot(0.5),   
-            () -> m_turretSubsystem.shoot(0),  
-            m_turretSubsystem                         
+        Commands.parallel(
+            // TASK 1: DRIVE AND SMART AIM
+            m_robotDrive.driveAndAimCommand(
+                () -> -m_driverController.getLeftY(), 
+                () -> -m_driverController.getLeftX(), 
+                this::getDynamicTargetPose 
+            ),
+
+            // TASK 2: CONTINUOUS DYNAMIC HOOD TRACKING (UPDATED)
+            Commands.run(() -> {
+                Pose2d currentTarget = getDynamicTargetPose();
+                
+                // Check if our current target is one of the Hubs
+                if (currentTarget.equals(BLUE_HUB_POSE) || currentTarget.equals(RED_HUB_POSE)) {
+                    // We are targeting the Hub! Calculate distance and use the table.
+                    double distanceToTarget = m_robotDrive.getPose().getTranslation()
+                                                .getDistance(currentTarget.getTranslation());
+                    
+                    double targetHoodPos = m_hoodSubsystem.calculateInterpolatedHoodPosition(distanceToTarget);
+                    m_hoodSubsystem.setHoodPosition(targetHoodPos);
+                } else {
+                    // We are targeting a Trench! Lock the hood to 0.38
+                    m_hoodSubsystem.setHoodPosition(0.38);
+                }
+            }, m_hoodSubsystem),
+
+            // TASK 3: INTAKE & SHOOT SEQUENCE
+            Commands.sequence(
+                Commands.runOnce(() -> {
+                    m_intakeSubsystem.extendIntake();
+                    m_intakeSubsystem.runIntakeForward(0.8);
+                    m_indexSubsystem.runIndexOneForward(0.8); 
+                    m_turretSubsystem.shootRPM(6000);         
+                }, m_intakeSubsystem, m_indexSubsystem, m_turretSubsystem),
+                
+                Commands.waitSeconds(1.0),
+                
+                Commands.run(() -> {
+                    m_indexSubsystem.runIndexOneForward(0.3); 
+                    m_indexSubsystem.runIndexTwoReverse(1.0); 
+                }, m_indexSubsystem)
+            )
+            .finallyDo(() -> {
+                m_intakeSubsystem.retractIntake();
+                m_intakeSubsystem.runIntakeForward(0.0);
+                m_turretSubsystem.stopShooter();
+                m_indexSubsystem.runIndexTwoReverse(0.0);
+                
+                Commands.waitSeconds(4.0)
+                    .andThen(Commands.runOnce(() -> m_indexSubsystem.runIndexOneForward(0.0), m_indexSubsystem))
+                    .schedule(); 
+            })
         )
     );
+
+    // ==========================================
+    // BUTTON 'A' - Increase closest hood values (+0.03)
+    // ==========================================
+    new JoystickButton(m_driverController, XboxController.Button.kA.value).onTrue(
+        Commands.runOnce(() -> {
+            double currentDist = getDistanceToHub();
+            m_hoodSubsystem.adjustClosestTableValues(currentDist, 0.01);
+        })
+    );
+
+    // ==========================================
+    // BUTTON 'B' - Decrease closest hood values (-0.03)
+    // ==========================================
+    new JoystickButton(m_driverController, XboxController.Button.kB.value).onTrue(
+        Commands.runOnce(() -> {
+            double currentDist = getDistanceToHub();
+            m_hoodSubsystem.adjustClosestTableValues(currentDist, -0.01);
+        })
+    );
+
 
 // new JoystickButton(m_driverController, XboxController.Button.kB.value).whileTrue(m_robotDrive.driveToPoseCommand(new Pose2d(1.0, 1.0, Rotation2d.fromDegrees(0))));
     
-// Pose2d hubPose = new Pose2d(8.0, 4.0, new Rotation2d());
+// ==========================================
+    // BUTTON 'X' - Auto-Aim, Shoot, & Smart Hood (NO INTAKE)
+    // ==========================================
+    new JoystickButton(m_driverController, XboxController.Button.kX.value).whileTrue(
+        Commands.parallel(
+            // TASK 1: DRIVE AND SMART AIM
+            m_robotDrive.driveAndAimCommand(
+                () -> -m_driverController.getLeftY(), 
+                () -> -m_driverController.getLeftX(), 
+                this::getDynamicTargetPose 
+            ),
 
-// // While holding 'A', use joysticks for X/Y, but let code handle rotation
-// new JoystickButton(m_driverController, XboxController.Button.kA.value).whileTrue(
-//     m_robotDrive.driveAndAimCommand(
-//         () -> -m_driverController.getLeftY(), // Forward/Back (Invert Y axis if necessary)
-//         () -> -m_driverController.getLeftX(), // Left/Right (Invert X axis if necessary)
-//         hubPose
-//     )
-// );
+            // TASK 2: CONTINUOUS DYNAMIC HOOD TRACKING
+            Commands.run(() -> {
+                Pose2d currentTarget = getDynamicTargetPose();
+                
+                // Check if our current target is one of the Hubs
+                if (currentTarget.equals(BLUE_HUB_POSE) || currentTarget.equals(RED_HUB_POSE)) {
+                    // We are targeting the Hub! Calculate distance and use the table.
+                    double distanceToTarget = m_robotDrive.getPose().getTranslation()
+                                                .getDistance(currentTarget.getTranslation());
+                    
+                    double targetHoodPos = m_hoodSubsystem.calculateInterpolatedHoodPosition(distanceToTarget);
+                    m_hoodSubsystem.setHoodPosition(targetHoodPos);
+                } else {
+                    // We are targeting a Trench! Lock the hood to 0.38
+                    m_hoodSubsystem.setHoodPosition(0.38);
+                }
+            }, m_hoodSubsystem),
 
-// Button A: Run Index and Turret Forward
-// new JoystickButton(m_driverController, XboxController.Button.kRightBumper.value)
-//     .onTrue(new RunCommand(
-//         () -> {
-//             m_indexSubsystem.runIndexOneForward(0.3);
-//             m_indexSubsystem.runIndexTwoForward(0.3);
-//             m_turretSubsystem.shoot(0.5);
+            // TASK 3: SHOOT SEQUENCE ONLY (No Intake)
+            Commands.sequence(
+                Commands.runOnce(() -> {
+                    m_indexSubsystem.runIndexOneForward(0.8); // Shift note up
+                    m_turretSubsystem.shootRPM(6000);         // Spool up
+                }, m_indexSubsystem, m_turretSubsystem),      // <-- Removed m_intakeSubsystem requirement!
+                
+                Commands.waitSeconds(1.0),
+                
+                Commands.run(() -> {
+                    m_indexSubsystem.runIndexOneForward(0.3); 
+                    m_indexSubsystem.runIndexTwoReverse(1.0); 
+                }, m_indexSubsystem)
+            )
+            .finallyDo(() -> {
+                // <-- Removed intake retract commands from here
+                m_turretSubsystem.stopShooter();
+                m_indexSubsystem.runIndexTwoReverse(0.0);
+                
+                Commands.waitSeconds(4.0)
+                    .andThen(Commands.runOnce(() -> m_indexSubsystem.runIndexOneForward(0.0), m_indexSubsystem))
+                    .schedule(); 
+            })
+        )
+    );
 
-//         },  
+    // ==========================================
+    // BUTTON 'RIGHT BUMPER' - Shoot
+    // ==========================================
+
+    new JoystickButton(m_driverController, XboxController.Button.kRightBumper.value).whileTrue(
+    // 1. Start the shooter immediately
+    Commands.runOnce(() -> {
+        m_turretSubsystem.shootRPM(6000);
+    }, m_turretSubsystem)     // <-- Added m_hoodSubsystem as a requirement)
         
-//         m_indexSubsystem, m_turretSubsystem // Require both subsystems
-//     )).onFalse(new RunCommand(() -> {
-//             m_indexSubsystem.runIndexOneForward(0);
-//             m_indexSubsystem.runIndexTwoForward(0);
-//             m_turretSubsystem.shoot(0.4);
-//         }, m_indexSubsystem, m_turretSubsystem).withTimeout(1).andThen(new RunCommand(() -> {
-//             m_indexSubsystem.runIndexOneForward(0);
-//             m_indexSubsystem.runIndexTwoForward(0);
-//             m_turretSubsystem.shoot(0.35);
-//         }, m_indexSubsystem, m_turretSubsystem)).withTimeout(1).andThen(new RunCommand(() -> {
-//             m_indexSubsystem.runIndexOneForward(0);
-//             m_indexSubsystem.runIndexTwoForward(0);
-//             m_turretSubsystem.shoot(0.30);
-//         }, m_indexSubsystem, m_turretSubsystem)).withTimeout(1).andThen(new RunCommand(() -> {
-//             m_indexSubsystem.runIndexOneForward(0);
-//             m_indexSubsystem.runIndexTwoForward(0);
-//             m_turretSubsystem.shoot(0.25);
-//         }, m_indexSubsystem, m_turretSubsystem)));
+        // 2. Wait exactly 1.0 seconds
+        .andThen(Commands.waitSeconds(1.0))
+        
+        // 3. Turn on the indexer to feed the note
+        .andThen(Commands.run(() -> {
+            m_indexSubsystem.runIndexOneForward(0.3);
+            m_indexSubsystem.runIndexTwoReverse(1);
+        }, m_indexSubsystem))
+        
+        // 4. When the button is released (or interrupted), stop EVERYTHING
+        .finallyDo(() -> {
+            m_indexSubsystem.runIndexOneForward(0);
+            m_indexSubsystem.runIndexTwoReverse(0);
+            m_turretSubsystem.stopShooter();
+        })
+);
 
-
-// Inside RobotContainer.java -> configureBindings()
+    // ==========================================
+    // BUTTON 'LEFT BUMPER' - Intake
+    // ==========================================
 
 // When Left Bumper is HELD: Extend the intake AND spin the rollers.
 // When RELEASED: Retract the intake AND stop the rollers.
@@ -181,8 +358,8 @@ new JoystickButton(m_driverController, XboxController.Button.kLeftBumper.value).
         () -> {
             // --- RUNS ONCE ON PRESS ---
             m_intakeSubsystem.extendIntake();
-            m_intakeSubsystem.runIntakeForward(0.3); 
-            m_indexSubsystem.runIndexOneForward(0.3); // Start indexer immediately
+            m_intakeSubsystem.runIntakeForward(0.8); 
+            m_indexSubsystem.runIndexOneForward(0.8); // Start indexer immediately
         },  
         () -> {
             // --- RUNS ONCE ON RELEASE ---
@@ -198,87 +375,6 @@ new JoystickButton(m_driverController, XboxController.Button.kLeftBumper.value).
     )
 );
     
-
-// new JoystickButton(m_driverController, XboxController.Button.kLeftBumper.value)
-//     .onTrue(new StartEndCommand(
-//         () -> {
-//             m_intakeSubsystem.extendIntake();
-
-//         },  
-//         () -> {
-//            m_intakeSubsystem.stopExtendIntake();
-//         },
-//         m_intakeSubsystem // Require both subsystems
-//     )
-//     .withTimeout(0.5)
-//     .andThen(new StartEndCommand(
-//         () -> {
-//             m_intakeSubsystem.runIntakeForward(0.3);
-//         }, () -> {
-//             m_intakeSubsystem.runIntakeForward(0);
-//         },
-//         m_intakeSubsystem // Require both subsystems
-//     ))
-    
-//     ).onFalse(new StartEndCommand(
-//         () -> {
-//             m_intakeSubsystem.retractIntake();
-
-//         },  
-//         () -> {
-//            m_intakeSubsystem.stopExtendIntake();
-//         },
-//         m_intakeSubsystem // Require both subsystems
-//     )
-//     .withTimeout(0.5)
-//     );
-
-    // new JoystickButton(m_driverController, XboxController.Button.kA.value)
-    // // 1. WHAT HAPPENS WHILE THE BUTTON IS HELD
-    // .whileTrue(
-    //     // Step A: Extend the intake for 2 seconds
-    //     new StartEndCommand(
-    //         () -> { m_intakeSubsystem.extendIntake(); },  
-    //         () -> { m_intakeSubsystem.stopExtendIntake(); }, // Stop extending motors
-    //         m_intakeSubsystem
-    //     )
-    //     .withTimeout(0.5) 
-        
-    //     // Step B: After 2 seconds, start intaking 
-    //     .andThen(
-    //         new RunCommand(
-    //             () -> { m_intakeSubsystem.runIntakeForward(1);; }, 
-    //             m_intakeSubsystem
-    //         )
-    //     )
-    // )
-    
-    // // 2. WHAT HAPPENS WHEN THE BUTTON IS RELEASED
-    // .onFalse(
-    //     // Step C: Retract the intake
-    //     new StartEndCommand(
-    //         () -> { m_intakeSubsystem.retractIntake(); },
-    //         () -> { m_intakeSubsystem.stopExtendIntake(); }, // Stop retracting motors
-    //         m_intakeSubsystem
-    //     )
-    //     .withTimeout(0.5) // Give it 2 seconds to retract!
-    // );
-
-// // Button B: Run Intake and Index One Reverse
-// new JoystickButton(m_driverController, XboxController.Button.kB.value)
-//     .whileTrue(new StartEndCommand(
-//         () -> {
-//             m_indexSubsystem.runIndexOneReverse(0.3);
-//             m_indexSubsystem.runIndexTwoReverse(0.3);
-//             m_turretSubsystem.shootReverse(0.5);
-//         },
-//         () -> {
-//             m_indexSubsystem.runIndexOneReverse(0);
-//             m_indexSubsystem.runIndexTwoReverse(0);
-//             m_turretSubsystem.shootReverse(0);
-//         },
-//         m_indexSubsystem, m_turretSubsystem // Require both subsystems
-//     ));
 }
 
 public Command getAutonomousCommand() {

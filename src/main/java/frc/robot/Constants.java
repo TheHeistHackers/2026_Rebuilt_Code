@@ -88,14 +88,24 @@ public final class Constants {
   public static final class IntakeConstants {
     public static final int intakeMotorID = 21;
     public static final int intakeExtendMotorID = 22;
+
+    // DIO port for the Absolute Encoder
+    public static final int encoderDIOPort = 2;
+    // Position offset for the Absolute Encoder (this will depend on how you mounted it and where your "zero" position is)
+    public static final double encoderOffset = 0.35;
   }
 
   public static final class IndexConstants {
     public static final int indexMotorOneID = 31;
+    public static final int indexMotorTwoID = 32;
   }
 
   public static final class TurretConstants {
     public static final int turretMotorOneID = 41;
     public static final int turretMotorTwoID = 42;
+
+    public static final int hoodMotorID = 43;
+    public static final int hoodEncoderDIOPort = 3;
+    public static final double hoodEncoderOffset = 0.36;
   }
 }

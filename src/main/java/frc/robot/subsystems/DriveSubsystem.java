@@ -8,6 +8,7 @@ import edu.wpi.first.hal.FRCNetComm.tInstances;
 import edu.wpi.first.hal.FRCNetComm.tResourceType;
 
 import java.util.function.DoubleSupplier;
+import java.util.function.Supplier;
 
 import com.studica.frc.AHRS;
 import com.studica.frc.AHRS.NavXComType;
@@ -248,8 +249,10 @@ public class DriveSubsystem extends SubsystemBase {
     .until(() -> xController.atSetpoint() && yController.atSetpoint() && thetaController.atGoal())
     .finallyDo(() -> drive(0, 0, 0, true));
   }
-
-  public Command driveAndAimCommand(DoubleSupplier xSupplier, DoubleSupplier ySupplier, Pose2d targetPose) {
+// 1. CHANGE THIS LINE: Accept a Supplier<Pose2d> instead of a static Pose2d
+  public Command driveAndAimCommand(DoubleSupplier xSupplier, DoubleSupplier ySupplier, Supplier<Pose2d> targetPoseSupplier) {
+    
+    // Create a rotation PID controller to snap to the target angle
     ProfiledPIDController thetaController = new ProfiledPIDController(
         1.5, 0, 0, 
         new TrapezoidProfile.Constraints(Math.PI * 2, Math.PI * 2) 
@@ -260,13 +263,26 @@ public class DriveSubsystem extends SubsystemBase {
       double xSpeed = xSupplier.getAsDouble();
       double ySpeed = ySupplier.getAsDouble();
       Pose2d currentPose = getPose();
-      Translation2d difference = targetPose.getTranslation().minus(currentPose.getTranslation());
+
+      // ========================================================
+      // 2. ADD THIS LINE: Fetch the correct pose RIGHT NOW.
+      // This forces the code to check your alliance color 
+      // every single loop while you hold the button!
+      // ========================================================
+      Pose2d activeTargetPose = targetPoseSupplier.get();
+
+      // Calculate the angle required to point AT the target using the activeTargetPose
+      Translation2d difference = activeTargetPose.getTranslation().minus(currentPose.getTranslation());
       Rotation2d targetAngle = difference.getAngle();
+
+      // Calculate the rotation speed using PID to close the gap
       double rotSpeed = thetaController.calculate(
           currentPose.getRotation().getRadians(), 
           targetAngle.getRadians()
       );
       rotSpeed = MathUtil.clamp(rotSpeed, -1.0, 1.0);
+
+      // Drive! (Feed joystick translation + automatic rotation)
       drive(xSpeed, ySpeed, rotSpeed, true);
     });
   }
