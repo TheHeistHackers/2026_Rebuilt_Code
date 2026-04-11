@@ -58,7 +58,7 @@ public class TurretSubsystem extends SubsystemBase {
 
     // --- Configure the Velocity PID & Feedforward ---
     ClosedLoopConfig closedLoopConfig = new ClosedLoopConfig();
-    closedLoopConfig.p(0.001); // Start very small for flywheels
+    closedLoopConfig.p(0.01); // Start very small for flywheels
     closedLoopConfig.i(0.0);
     closedLoopConfig.d(0.0);
     // Feedforward (FF) does the heavy lifting. 

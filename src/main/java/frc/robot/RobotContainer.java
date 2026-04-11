@@ -183,14 +183,14 @@ public class RobotContainer {
     // ==========================================
     // BUTTON 'Y' - Auto-Aim, Shoot, & Dynamic Hood
     // ==========================================
-    new JoystickButton(m_driverController, XboxController.Button.kY.value).whileTrue(
+    new JoystickButton(m_driverController, XboxController.Button.kRightBumper.value).whileTrue(
         Commands.parallel(
             // TASK 1: DRIVE AND SMART AIM
-            m_robotDrive.driveAndAimCommand(
-                () -> -m_driverController.getLeftY(), 
-                () -> -m_driverController.getLeftX(), 
-                this::getDynamicTargetPose 
-            ),
+            // m_robotDrive.driveAndAimCommand(
+            //     () -> -m_driverController.getLeftY(), 
+            //     () -> -m_driverController.getLeftX(), 
+            //     this::getDynamicTargetPose 
+            // ),
 
             // TASK 2: CONTINUOUS DYNAMIC HOOD TRACKING (UPDATED)
             Commands.run(() -> {
@@ -203,10 +203,10 @@ public class RobotContainer {
                                                 .getDistance(currentTarget.getTranslation());
                     
                     double targetHoodPos = m_hoodSubsystem.calculateInterpolatedHoodPosition(distanceToTarget);
-                    m_hoodSubsystem.setHoodPosition(targetHoodPos);
+                    m_hoodSubsystem.raiseHood();
                 } else {
                     // We are targeting a Trench! Lock the hood to 0.38
-                    m_hoodSubsystem.setHoodPosition(0.38);
+                    m_hoodSubsystem.raiseHood();
                 }
             }, m_hoodSubsystem),
 
@@ -214,9 +214,9 @@ public class RobotContainer {
             Commands.sequence(
                 Commands.runOnce(() -> {
                     m_intakeSubsystem.extendIntake();
-                    m_intakeSubsystem.runIntakeForward(0.8);
+                    m_intakeSubsystem.runIntakeForward(1);
                     m_indexSubsystem.runIndexOneForward(0.8); 
-                    m_turretSubsystem.shootRPM(6000);         
+                    m_turretSubsystem.shootRPM(6700);         
                 }, m_intakeSubsystem, m_indexSubsystem, m_turretSubsystem),
                 
                 Commands.waitSeconds(1.0),
@@ -232,10 +232,7 @@ public class RobotContainer {
                 m_turretSubsystem.stopShooter();
                 m_indexSubsystem.runIndexTwoReverse(0.0);
                 m_hoodSubsystem.lowerHood();
-                
-                Commands.waitSeconds(4.0)
-                    .andThen(Commands.runOnce(() -> m_indexSubsystem.runIndexOneForward(0.0), m_indexSubsystem))
-                    .schedule(); 
+                m_indexSubsystem.runIndexOneForward(0);
             })
         )
     );
@@ -297,13 +294,13 @@ public class RobotContainer {
             Commands.sequence(
                 Commands.runOnce(() -> {
                     m_indexSubsystem.runIndexOneForward(0.8); // Shift note up
-                    m_turretSubsystem.shootRPM(6000);         // Spool up
+                    m_turretSubsystem.shootRPM(5250);         // Spool up
                 }, m_indexSubsystem, m_turretSubsystem),      // <-- Removed m_intakeSubsystem requirement!
                 
                 Commands.waitSeconds(1.0),
                 
                 Commands.run(() -> {
-                    m_indexSubsystem.runIndexOneForward(0.3); 
+                    m_indexSubsystem.runIndexOneForward(1); 
                     m_indexSubsystem.runIndexTwoReverse(1.0); 
                 }, m_indexSubsystem)
             )
@@ -312,10 +309,7 @@ public class RobotContainer {
                 m_turretSubsystem.stopShooter();
                 m_indexSubsystem.runIndexTwoReverse(0.0);
                 m_hoodSubsystem.lowerHood();
-                
-                Commands.waitSeconds(4.0)
-                    .andThen(Commands.runOnce(() -> m_indexSubsystem.runIndexOneForward(0.0), m_indexSubsystem))
-                    .schedule(); 
+                m_indexSubsystem.runIndexOneForward(0);
             })
         )
     );
@@ -324,18 +318,19 @@ public class RobotContainer {
     // BUTTON 'RIGHT BUMPER' - Shoot
     // ==========================================
 
-    new JoystickButton(m_driverController, XboxController.Button.kRightBumper.value).whileTrue(
+    new JoystickButton(m_driverController, XboxController.Button.kY.value).whileTrue(
     // 1. Start the shooter immediately
     Commands.runOnce(() -> {
-        m_turretSubsystem.shootRPM(6000);
-    }, m_turretSubsystem)     // <-- Added m_hoodSubsystem as a requirement)
+        m_turretSubsystem.shootRPM(6700);
+        m_hoodSubsystem.raiseHood();
+    }, m_turretSubsystem, m_hoodSubsystem )     // <-- Added m_hoodSubsystem as a requirement)
         
         // 2. Wait exactly 1.0 seconds
         .andThen(Commands.waitSeconds(1.0))
         
         // 3. Turn on the indexer to feed the note
         .andThen(Commands.run(() -> {
-            m_indexSubsystem.runIndexOneForward(0.3);
+            m_indexSubsystem.runIndexOneForward(1);
             m_indexSubsystem.runIndexTwoReverse(1);
         }, m_indexSubsystem))
         
@@ -360,18 +355,15 @@ new JoystickButton(m_driverController, XboxController.Button.kLeftBumper.value).
         () -> {
             // --- RUNS ONCE ON PRESS ---
             m_intakeSubsystem.extendIntake();
-            m_intakeSubsystem.runIntakeForward(0.8); 
-            m_indexSubsystem.runIndexOneForward(0.8); // Start indexer immediately
+            m_intakeSubsystem.runIntakeForward(1); 
+            m_indexSubsystem.runIndexOneForward(1); // Start indexer immediately
         },  
         () -> {
             // --- RUNS ONCE ON RELEASE ---
             m_intakeSubsystem.retractIntake();
             m_intakeSubsystem.runIntakeForward(0.0); 
+            m_indexSubsystem.runIndexOneForward(0);
 
-            // Fire-and-forget command: Wait 4 seconds, then stop the indexer
-            new WaitCommand(4.0)
-                .andThen(() -> m_indexSubsystem.runIndexOneForward(0.0), m_indexSubsystem)
-                .schedule(); // <--- This tells WPILib to run this sequence in the background!
         },
         m_intakeSubsystem, m_indexSubsystem // Require BOTH subsystems
     )

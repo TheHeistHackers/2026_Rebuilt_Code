@@ -42,7 +42,7 @@ public class HoodSubsystem extends SubsystemBase{
     hoodTable.put(3.0, 0.46);
     hoodTable.put(4.0, 0.44);
     hoodTable.put(5.0, 0.42);
-    hoodTable.put(6.0, 0.4);
+    hoodTable.put(6.0, 0.45);
 
     // ==========================================
     // 2. HOOD ENCODER & PID INITIALIZATION
