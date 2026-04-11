@@ -62,12 +62,93 @@ public class RobotContainer {
 
   public RobotContainer() {
 
-    NamedCommands.registerCommand("extendIntake", 
-        Commands.runOnce(() -> m_intakeSubsystem.extendIntake(), m_intakeSubsystem)
+    // ==========================================
+    // PATHPLANNER NAMED COMMANDS
+    // ==========================================
+
+    // 1. "HoodDown" - Lowers the hood safely.
+    NamedCommands.registerCommand("HoodDown", 
+        Commands.runOnce(() -> m_hoodSubsystem.lowerHood(), m_hoodSubsystem)
     );
 
-    NamedCommands.registerCommand("retractIntake", 
-        Commands.runOnce(() -> m_intakeSubsystem.retractIntake(), m_intakeSubsystem)
+    // 2. "Intake" - Runs the intake and indexer. When the path segment ends, it retracts and stops.
+    NamedCommands.registerCommand("Intake",
+        Commands.startEnd(
+            () -> {
+                m_intakeSubsystem.extendIntake();
+                m_intakeSubsystem.runIntakeForward(0.8); 
+                m_indexSubsystem.runIndexOneForward(0.8); 
+            },
+            () -> {
+                m_intakeSubsystem.retractIntake();
+                m_intakeSubsystem.runIntakeForward(0.0); 
+                m_indexSubsystem.runIndexOneForward(0.0);
+            },
+            m_intakeSubsystem, m_indexSubsystem
+        )
+    );
+
+    // 3. "Shoot" - Standard shooting sequence (Spool -> Wait -> Feed).
+    NamedCommands.registerCommand("Shoot",
+        Commands.sequence(
+            Commands.runOnce(() -> m_turretSubsystem.shootRPM(6000), m_turretSubsystem),
+            Commands.waitSeconds(1.0),
+            Commands.run(() -> {
+                m_indexSubsystem.runIndexOneForward(0.3);
+                m_hoodSubsystem.raiseHood();
+                m_indexSubsystem.runIndexTwoReverse(1.0);
+            }, m_indexSubsystem, m_hoodSubsystem)
+        ).finallyDo(() -> {
+            m_indexSubsystem.runIndexOneForward(0.0);
+            m_indexSubsystem.runIndexTwoReverse(0.0);
+            m_turretSubsystem.stopShooter();
+            m_hoodSubsystem.lowerHood();
+        })
+    );
+
+    // 4. "ShootIntake" - Combined intake and shoot sequence (extracted from Button Y).
+    NamedCommands.registerCommand("ShootIntake",
+        Commands.sequence(
+            Commands.runOnce(() -> {
+                m_intakeSubsystem.extendIntake();
+                m_intakeSubsystem.runIntakeForward(0.8);
+                m_indexSubsystem.runIndexOneForward(0.8); 
+                m_turretSubsystem.shootRPM(6000);
+                m_hoodSubsystem.raiseHood();         
+            }, m_intakeSubsystem, m_indexSubsystem, m_turretSubsystem, m_hoodSubsystem),
+            Commands.waitSeconds(1.0),
+            Commands.run(() -> {
+                m_indexSubsystem.runIndexOneForward(0.8); 
+                m_indexSubsystem.runIndexTwoReverse(1.0); 
+            }, m_indexSubsystem)
+        ).finallyDo(() -> {
+            m_intakeSubsystem.retractIntake();
+            m_intakeSubsystem.runIntakeForward(0.0);
+            m_turretSubsystem.stopShooter();
+            m_indexSubsystem.runIndexTwoReverse(0.0);
+            m_indexSubsystem.runIndexOneForward(0.0);
+            m_hoodSubsystem.lowerHood();
+        })
+    );
+
+    // 5. "StopShoot" - Safely shuts down all shooting and intaking mechanisms.
+    NamedCommands.registerCommand("StopShoot", 
+        Commands.runOnce(() -> {
+            // 1. Stop the shooter
+            m_turretSubsystem.stopShooter();
+            
+            // 2. Lower the hood
+            m_hoodSubsystem.lowerHood();
+            
+            // 3. Retract the intake and stop its rollers
+            m_intakeSubsystem.retractIntake();
+            m_intakeSubsystem.runIntakeForward(0.0);
+            
+            // 4. Stop the indexers to ensure no notes are accidentally fed
+            m_indexSubsystem.runIndexOneForward(0.0);
+            m_indexSubsystem.runIndexTwoReverse(0.0);
+            
+        }, m_turretSubsystem, m_hoodSubsystem, m_intakeSubsystem, m_indexSubsystem)
     );
 
     // 2. Build the auto chooser SECOND
