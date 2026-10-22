@@ -37,12 +37,12 @@ public class HoodSubsystem extends SubsystemBase{
   public HoodSubsystem(){
 
     hoodTable.put(0.0, 0.51);
-    hoodTable.put(1.0, 0.50);
-    hoodTable.put(2.0, 0.48);
-    hoodTable.put(3.0, 0.46);
-    hoodTable.put(4.0, 0.44);
-    hoodTable.put(5.0, 0.42);
-    hoodTable.put(6.0, 0.45);
+    hoodTable.put(1.0, 0.51);
+    hoodTable.put(2.0, 0.51);
+    hoodTable.put(3.0, 0.47);
+    hoodTable.put(4.0, 0.45);
+    hoodTable.put(5.0, 0.43);
+    hoodTable.put(6.0, 0.42);
 
     // ==========================================
     // 2. HOOD ENCODER & PID INITIALIZATION
@@ -110,6 +110,12 @@ public void adjustClosestTableValues(double currentDistance, double adjustmentAm
   public void raiseHood() {
     System.out.println("Raising Hood - max");
     hoodController.setSetpoint(0.38);
+    isMovingHood = true;
+  }
+
+  public void middleHood() {
+    System.out.println("Raising Hood - middle");
+    hoodController.setSetpoint(0.44);
     isMovingHood = true;
   }
 

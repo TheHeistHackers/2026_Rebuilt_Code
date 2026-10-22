@@ -70,9 +70,9 @@ public class VisionSubsystem extends SubsystemBase {
         Optional<EstimatedRobotPose> estimatedPose = poseEstimator.estimateCoprocMultiTagPose(result);
 
 
-        if (estimatedPose.isEmpty()){
-            estimatedPose = poseEstimator.estimateLowestAmbiguityPose(result);
-        }
+        // if (estimatedPose.isEmpty()){
+        //     estimatedPose = poseEstimator.estimateLowestAmbiguityPose(result);
+        // }
 
 
         // If it successfully calculated a position
