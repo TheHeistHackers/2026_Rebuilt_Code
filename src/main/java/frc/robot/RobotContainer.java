@@ -323,9 +323,10 @@ public class RobotContainer {
     // ==========================================
     new JoystickButton(m_driverController, XboxController.Button.kA.value).onTrue(
         Commands.runOnce(() -> {
-            double currentDist = getDistanceToHub();
-            m_hoodSubsystem.adjustClosestTableValues(currentDist, 0.01);
-        })
+            //double currentDist = getDistanceToHub();
+           // m_hoodSubsystem.adjustClosestTableValues(currentDist, 0.01);
+           m_indexSubsystem.runIndexOneForward(1);
+        }, m_indexSubsystem)
     );
 
     // ==========================================
@@ -403,8 +404,8 @@ public class RobotContainer {
     // 1. Start the shooter immediately
     Commands.runOnce(() -> {
         m_turretSubsystem.shootRPM(6700);
-        m_hoodSubsystem.raiseHood();
-    }, m_turretSubsystem, m_hoodSubsystem )     // <-- Added m_hoodSubsystem as a requirement)
+        //m_hoodSubsystem.raiseHood();
+    }, m_turretSubsystem )   // <-- Added m_hoodSubsystem as a requirement)
         
         // 2. Wait exactly 1.0 seconds
         .andThen(Commands.waitSeconds(1.0))
