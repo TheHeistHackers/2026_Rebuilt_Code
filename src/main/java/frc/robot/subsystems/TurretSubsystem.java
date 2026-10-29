@@ -50,7 +50,7 @@ public class TurretSubsystem extends SubsystemBase {
     shooterControllerTwo = turretMotorTwo.getClosedLoopController();
 
     SparkFlexConfig turretConfig = new SparkFlexConfig();
-    turretConfig.idleMode(IdleMode.kBrake);
+    turretConfig.idleMode(IdleMode.kCoast);
     // Bumped current limit slightly to handle the aggressive spin-up of velocity control
     turretConfig.smartCurrentLimit(40); 
     turretConfig.secondaryCurrentLimit(45);
@@ -91,14 +91,6 @@ public class TurretSubsystem extends SubsystemBase {
     // Note: We use .setSetpoint() for the 2025 REVLib API!
     shooterControllerOne.setSetpoint(targetRPM, ControlType.kVelocity);
     shooterControllerTwo.setSetpoint(targetRPM, ControlType.kVelocity);
-  }
-
-/**
-   * Stop the shooter motors safely
-   */
-  public void startShooter(double speed) {
-    turretMotorOne.set(speed);
-    turretMotorTwo.set(speed);
   }
 
   /**
