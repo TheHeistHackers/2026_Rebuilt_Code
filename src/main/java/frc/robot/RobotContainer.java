@@ -322,11 +322,12 @@ public class RobotContainer {
     // BUTTON 'A' - Increase closest hood values (+0.03)
     // ==========================================
     new JoystickButton(m_driverController, XboxController.Button.kA.value).onTrue(
-        Commands.runOnce(() -> {
+        Commands.startEnd(() -> {
             //double currentDist = getDistanceToHub();
            // m_hoodSubsystem.adjustClosestTableValues(currentDist, 0.01);
-           m_indexSubsystem.runIndexOneForward(1);
-        }, m_indexSubsystem)
+           m_indexSubsystem.runIndexTwoReverse(0.5);
+        }, () ->  m_indexSubsystem.runIndexTwoReverse(0),
+         m_indexSubsystem)
     );
 
     // ==========================================
