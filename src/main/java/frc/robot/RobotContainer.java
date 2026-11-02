@@ -318,27 +318,30 @@ public class RobotContainer {
         )
     );
 
-    // ==========================================
-    // BUTTON 'A' - Increase closest hood values (+0.03)
-    // ==========================================
-    new JoystickButton(m_driverController, XboxController.Button.kA.value).onTrue(
-        Commands.startEnd(() -> {
-            //double currentDist = getDistanceToHub();
-           // m_hoodSubsystem.adjustClosestTableValues(currentDist, 0.01);
-           m_indexSubsystem.runIndexTwoReverse(0.5);
-        }, () ->  m_indexSubsystem.runIndexTwoReverse(0),
-         m_indexSubsystem)
+    new JoystickButton(m_driverController, XboxController.Button.kB.value).whileTrue(
+        Commands.startEnd(
+            () -> m_turretSubsystem.shootRPM(6700),
+            () -> m_turretSubsystem.stopShooter(),
+            m_turretSubsystem
+        )
     );
 
-    // ==========================================
-    // BUTTON 'B' - Decrease closest hood values (-0.03)
-    // ==========================================
-    new JoystickButton(m_driverController, XboxController.Button.kB.value).onTrue(
-        Commands.runOnce(() -> {
-            double currentDist = getDistanceToHub();
-            m_hoodSubsystem.adjustClosestTableValues(currentDist, -0.01);
-        })
+    // A (hold) - feed into shooter
+    new JoystickButton(m_driverController, XboxController.Button.kA.value).whileTrue(
+        Commands.startEnd(
+            () -> {
+                m_indexSubsystem.runIndexOneForward(1);
+                m_indexSubsystem.runIndexTwoReverse(1);
+            },
+            () -> {
+                m_indexSubsystem.runIndexOneForward(0);
+                m_indexSubsystem.runIndexTwoReverse(0);
+            },
+            m_indexSubsystem
+        )
     );
+
+
 
 
 // new JoystickButton(m_driverController, XboxController.Button.kB.value).whileTrue(m_robotDrive.driveToPoseCommand(new Pose2d(1.0, 1.0, Rotation2d.fromDegrees(0))));
